@@ -16,6 +16,7 @@ export default function Index({
     generations,
     latestStats,
     selectedGenerationId = null,
+    selectedGeneration: selectedGenerationProp = null,
     prefillGeneration = null,
 }) {
     const { locale } = useUiLanguage();
@@ -60,10 +61,18 @@ export default function Index({
         [data.template_key, templates],
     );
 
-    const selectedGeneration = useMemo(
-        () => generationList.find((generation) => generation.id === selectedId) ?? generationList[0] ?? null,
-        [generationList, selectedId],
-    );
+    const selectedGeneration = useMemo(() => {
+        if (selectedId === null) {
+            return generationList[0] ?? null;
+        }
+
+        return (
+            generationList.find((generation) => generation.id === selectedId) ??
+            (selectedGenerationProp?.id === selectedId ? selectedGenerationProp : null) ??
+            generationList[0] ??
+            null
+        );
+    }, [generationList, selectedGenerationProp, selectedId]);
 
     const selectedVariation =
         selectedGeneration?.variations?.[selectedVariationIndex] ??
@@ -76,7 +85,11 @@ export default function Index({
             return;
         }
 
-        if (selectedGenerationId && generationList.some((generation) => generation.id === selectedGenerationId)) {
+        if (
+            selectedGenerationId &&
+            (generationList.some((generation) => generation.id === selectedGenerationId) ||
+                selectedGenerationProp?.id === selectedGenerationId)
+        ) {
             setSelectedId(selectedGenerationId);
             return;
         }
@@ -84,7 +97,7 @@ export default function Index({
         if (!generationList.some((generation) => generation.id === selectedId)) {
             setSelectedId(generationList[0].id);
         }
-    }, [generationList, selectedGenerationId, selectedId]);
+    }, [generationList, selectedGenerationId, selectedGenerationProp, selectedId]);
 
     useEffect(() => {
         setSelectedVariationIndex(0);

@@ -279,7 +279,7 @@ PROMPT;
         Log::warning('AI provider generation failed.', [
             'provider' => $provider,
             'message' => $exception->getMessage(),
-            'prompt_preview' => mb_substr($prompt, 0, 400),
+            'prompt_length' => mb_strlen($prompt),
         ]);
     }
 }

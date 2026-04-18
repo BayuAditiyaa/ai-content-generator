@@ -51,11 +51,10 @@ class ContentGenerationFlowTest extends TestCase
             'length_control_value' => 250,
         ]);
 
-        $response->assertRedirect(route('dashboard'));
-
         $generation = ContentGeneration::query()->latest()->first();
 
         $this->assertNotNull($generation);
+        $response->assertRedirect(route('dashboard', ['generation' => $generation->id]));
         $this->assertSame('How to save time with AI', $generation->topic);
         $this->assertSame('gemini', $generation->provider);
         $this->assertSame(842, $generation->generation_duration_ms);
@@ -157,7 +156,6 @@ class ContentGenerationFlowTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('generations.regenerate', $existingGeneration));
 
-        $response->assertRedirect(route('dashboard'));
         $this->assertDatabaseCount('content_generations', 2);
 
         $newGeneration = ContentGeneration::query()
@@ -165,6 +163,7 @@ class ContentGenerationFlowTest extends TestCase
             ->latest('id')
             ->first();
 
+        $response->assertRedirect(route('dashboard', ['generation' => $newGeneration->id]));
         $this->assertSame('Monthly update', $newGeneration->topic);
         $this->assertSame('groq', $newGeneration->provider);
         $this->assertSame('Fresh regenerated content', $newGeneration->generated_content);
@@ -258,5 +257,81 @@ class ContentGenerationFlowTest extends TestCase
             ->where('filters.favorites', true)
             ->has('generations.data', 1)
             ->where('generations.data.0.topic', 'Groq favorite'));
+    }
+
+    public function test_dashboard_can_select_a_generation_outside_the_current_page(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (range(1, 8) as $index) {
+            ContentGeneration::query()->create([
+                'user_id' => $user->id,
+                'content_type' => 'Blog Post',
+                'topic' => "Recent result {$index}",
+                'keywords' => ["recent-{$index}"],
+                'target_audience' => 'Marketers',
+                'tone' => 'Professional',
+                'template_key' => 'blank',
+                'ui_language' => 'en',
+                'content_goal' => 'Awareness',
+                'output_format' => 'Paragraph',
+                'cta_style' => 'Soft',
+                'custom_instruction' => null,
+                'length_control_type' => 'words',
+                'length_control_value' => 250,
+                'variation_count' => 1,
+                'best_variation_index' => null,
+                'variations' => [
+                    ['title' => 'Variation 1', 'content' => "Recent content {$index}"],
+                ],
+                'prompt' => 'Prompt',
+                'generated_content' => "Recent content {$index}",
+                'provider' => 'gemini',
+                'model' => 'gemini-3-flash-preview',
+                'generation_duration_ms' => 300 + $index,
+                'created_at' => now()->subHours($index),
+                'updated_at' => now()->subHours($index),
+            ]);
+        }
+
+        $olderGeneration = ContentGeneration::query()->create([
+            'user_id' => $user->id,
+            'content_type' => 'Email',
+            'topic' => 'Older saved result',
+            'keywords' => ['older'],
+            'target_audience' => 'Subscribers',
+            'tone' => 'Friendly',
+            'template_key' => 'blank',
+            'ui_language' => 'en',
+            'content_goal' => 'Engagement',
+            'output_format' => 'Paragraph',
+            'cta_style' => 'Soft',
+            'custom_instruction' => null,
+            'length_control_type' => 'words',
+            'length_control_value' => 150,
+            'variation_count' => 1,
+            'best_variation_index' => null,
+            'variations' => [
+                ['title' => 'Variation 1', 'content' => 'Older content'],
+            ],
+            'prompt' => 'Prompt',
+            'generated_content' => 'Older content',
+            'provider' => 'gemini',
+            'model' => 'gemini-3-flash-preview',
+            'generation_duration_ms' => 300,
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard', [
+            'generation' => $olderGeneration->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('ContentGenerator/Index')
+            ->where('selectedGenerationId', $olderGeneration->id)
+            ->where('selectedGeneration.id', $olderGeneration->id)
+            ->where('selectedGeneration.topic', 'Older saved result'));
     }
 }

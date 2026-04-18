@@ -26,6 +26,12 @@ class ContentGenerationController extends Controller
         $templates = $this->templates();
         $selectedGenerationId = $request->integer('generation');
         $prefillGenerationId = $request->integer('prefill');
+        $selectedGeneration = $selectedGenerationId
+            ? $request->user()
+                ->contentGenerations()
+                ->whereKey($selectedGenerationId)
+                ->first()
+            : null;
 
         $generations = $request->user()
             ->contentGenerations()
@@ -68,6 +74,9 @@ class ContentGenerationController extends Controller
             ],
             'generations' => $generations,
             'selectedGenerationId' => $selectedGenerationId ?: null,
+            'selectedGeneration' => $selectedGeneration
+                ? $this->transformGeneration($selectedGeneration)
+                : null,
             'prefillGeneration' => $prefillGenerationId
                 ? optional(
                     $request->user()
@@ -134,7 +143,7 @@ class ContentGenerationController extends Controller
         }
 
         return redirect()
-            ->route('dashboard')
+            ->route('dashboard', ['generation' => $generation->id])
             ->with('flash.success', "Content generated for \"{$generation->topic}\".");
     }
 
@@ -192,7 +201,7 @@ class ContentGenerationController extends Controller
         }
 
         return redirect()
-            ->route('dashboard')
+            ->route('dashboard', ['generation' => $generation->id])
             ->with('flash.success', "Content regenerated for \"{$generation->topic}\".");
     }
 
@@ -223,9 +232,15 @@ class ContentGenerationController extends Controller
             $exportedContent,
         ])->implode(PHP_EOL);
 
-        return response($body)
-            ->header('Content-Type', 'text/plain')
-            ->header('Content-Disposition', "attachment; filename={$filename}");
+        return response()->streamDownload(
+            static function () use ($body): void {
+                echo $body;
+            },
+            $filename,
+            [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+            ],
+        );
     }
 
     protected function templates(): array

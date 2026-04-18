@@ -108,7 +108,15 @@ export default function Login({ status, canResetPassword }) {
                     </label>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                    <Link
+                        href={route('register')}
+                        className="rounded-md text-sm text-slate-600 underline underline-offset-4 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                    >
+                        {pickLanguage(locale, "Don't have an account yet?", 'Belum punya akun?')}
+                    </Link>
+
+                    <div className="flex items-center gap-4">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
@@ -118,9 +126,10 @@ export default function Login({ status, canResetPassword }) {
                         </Link>
                     )}
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        {pickLanguage(locale, 'Log in', 'Masuk')}
-                    </PrimaryButton>
+                        <PrimaryButton disabled={processing}>
+                            {pickLanguage(locale, 'Log in', 'Masuk')}
+                        </PrimaryButton>
+                    </div>
                 </div>
             </form>
         </GuestLayout>

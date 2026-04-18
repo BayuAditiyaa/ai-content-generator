@@ -95,14 +95,14 @@ export default function HistoryList({
                                         ? pickLanguage(locale, 'Regenerating...', 'Sedang generate ulang...')
                                         : pickLanguage(locale, 'Regenerate', 'Generate ulang')}
                                 </HistoryActionButton>
-                                <HistoryActionLink
+                                <HistoryDownloadLink
                                     href={route('generations.export', {
                                         contentGeneration: generation.id,
                                         variation: generation.best_variation_index ?? 0,
                                     })}
                                 >
                                     Export .txt
-                                </HistoryActionLink>
+                                </HistoryDownloadLink>
                                 <DangerButton
                                     type="button"
                                     disabled={deletingId === generation.id || regeneratingId === generation.id}
@@ -190,6 +190,18 @@ function HistoryActionLink({ href, children }) {
         >
             {children}
         </Link>
+    );
+}
+
+function HistoryDownloadLink({ href, children }) {
+    return (
+        <a
+            href={href}
+            download
+            className="inline-flex items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-400 hover:bg-stone-50"
+        >
+            {children}
+        </a>
     );
 }
 

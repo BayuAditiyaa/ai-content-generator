@@ -14,10 +14,24 @@ return new class extends Migration
             $table->json('variations')->nullable()->after('generated_content');
         });
 
-        DB::table('content_generations')->update([
-            'variation_count' => 1,
-            'variations' => DB::raw("json_array(json_object('title', 'Variation 1', 'content', generated_content))"),
-        ]);
+        DB::table('content_generations')
+            ->select(['id', 'generated_content'])
+            ->orderBy('id')
+            ->chunkById(100, function ($generations): void {
+                foreach ($generations as $generation) {
+                    DB::table('content_generations')
+                        ->where('id', $generation->id)
+                        ->update([
+                            'variation_count' => 1,
+                            'variations' => json_encode([
+                                [
+                                    'title' => 'Variation 1',
+                                    'content' => $generation->generated_content,
+                                ],
+                            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                        ]);
+                }
+            });
     }
 
     public function down(): void

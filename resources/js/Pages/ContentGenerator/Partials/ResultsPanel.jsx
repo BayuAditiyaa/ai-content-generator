@@ -52,6 +52,7 @@ export default function ResultsPanel({
                             </ResultActionButton>
                             <a
                                 href={exportHref}
+                                download
                                 className="inline-flex items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-stone-400 hover:bg-stone-50"
                             >
                                 Export .txt
