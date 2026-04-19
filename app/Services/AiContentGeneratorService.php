@@ -197,20 +197,25 @@ PROMPT;
         $fallbackTitle = $uiLanguage === 'id' ? 'Variasi 1' : 'Variation 1';
 
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            $variations = collect(Arr::get($decoded, 'variations', []))
-                ->filter(fn ($item) => is_array($item) && filled($item['content'] ?? null))
-                ->map(function (array $item, int $index) use ($fallbackTitle) {
-                    return [
-                        'title' => trim((string) ($item['title'] ?? str_replace('1', (string) ($index + 1), $fallbackTitle))),
-                        'content' => trim((string) $item['content']),
-                    ];
-                })
-                ->values()
-                ->all();
+            $variations = $this->mapVariations(
+                Arr::get($decoded, 'variations', []),
+                $fallbackTitle,
+                $expectedCount,
+            );
 
             if ($variations !== []) {
-                return array_slice($variations, 0, $expectedCount);
+                return $variations;
             }
+        }
+
+        $regexVariations = $this->extractVariationsWithRegex(
+            $normalizedText,
+            $fallbackTitle,
+            $expectedCount,
+        );
+
+        if ($regexVariations !== []) {
+            return $regexVariations;
         }
 
         return [[
@@ -229,6 +234,60 @@ PROMPT;
         }
 
         return trim($trimmed);
+    }
+
+    protected function mapVariations(array $items, string $fallbackTitle, int $expectedCount): array
+    {
+        return collect($items)
+            ->filter(fn ($item) => is_array($item) && filled($item['content'] ?? null))
+            ->map(function (array $item, int $index) use ($fallbackTitle) {
+                return [
+                    'title' => trim((string) ($item['title'] ?? str_replace('1', (string) ($index + 1), $fallbackTitle))),
+                    'content' => trim((string) $item['content']),
+                ];
+            })
+            ->values()
+            ->take($expectedCount)
+            ->all();
+    }
+
+    protected function extractVariationsWithRegex(string $rawText, string $fallbackTitle, int $expectedCount): array
+    {
+        preg_match_all(
+            '/"title"\s*:\s*"((?:\\\\.|[^"\\\\])*)"\s*,\s*"content"\s*:\s*"((?:\\\\.|[^"\\\\])*)"/su',
+            $rawText,
+            $matches,
+            PREG_SET_ORDER,
+        );
+
+        if ($matches === []) {
+            return [];
+        }
+
+        return collect($matches)
+            ->map(function (array $match, int $index) use ($fallbackTitle) {
+                return [
+                    'title' => $this->decodeLooseJsonString($match[1], str_replace('1', (string) ($index + 1), $fallbackTitle)),
+                    'content' => $this->decodeLooseJsonString($match[2], ''),
+                ];
+            })
+            ->filter(fn (array $item) => filled($item['content']))
+            ->values()
+            ->take($expectedCount)
+            ->all();
+    }
+
+    protected function decodeLooseJsonString(string $value, string $fallback = ''): string
+    {
+        $decoded = json_decode('"'.addcslashes($value, "\"\\").'"');
+
+        if (is_string($decoded) && $decoded !== '') {
+            return trim($decoded);
+        }
+
+        $normalized = str_replace(['\\"', '\\n', '\\r', '\\t', '\\/'], ['"', "\n", "\r", "\t", '/'], $value);
+
+        return trim($normalized) !== '' ? trim($normalized) : $fallback;
     }
 
     protected function resolveProviderConfigs(?string $preferredProvider = null): array
