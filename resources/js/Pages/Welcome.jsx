@@ -78,46 +78,48 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 <div className="mesh-orb animate-float-slow bottom-10 left-[40%] h-44 w-44 bg-cyan-200/30" />
 
                 <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <header className="welcome-header glass-panel mx-auto flex max-w-6xl items-center justify-between rounded-full px-4 py-3 sm:px-6">
-                        <Link href="/" className="inline-flex items-center gap-3">
+                    <header className="welcome-header glass-panel mx-auto flex max-w-6xl flex-col gap-4 rounded-[2rem] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-full sm:px-6 sm:py-3">
+                        <Link href="/" className="inline-flex min-w-0 items-center gap-3">
                             <div className="rounded-2xl bg-white/80 p-1.5">
                                 <ApplicationLogo className="h-11 w-11" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-teal-800/70">
                                     ProseAI
                                 </p>
-                                <p className="display-title text-xl text-slate-900">
+                                <p className="display-title truncate text-lg text-slate-900 sm:text-xl">
                                     AI Content Generator
                                 </p>
                             </div>
                         </Link>
 
-                        <nav className="flex items-center gap-2 sm:gap-3">
-                            <ThemeToggle theme={theme} onChange={setTheme} />
-                            <LanguageToggle locale={locale} onChange={setLocale} />
+                        <nav className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+                            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                                <ThemeToggle theme={theme} onChange={setTheme} />
+                                <LanguageToggle locale={locale} onChange={setLocale} />
+                            </div>
                             {auth.user ? (
                                 <Link
                                     href={route('dashboard')}
-                                    className="rounded-full border border-teal-700/20 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-900 transition hover:bg-teal-100"
+                                    className="inline-flex items-center justify-center rounded-full border border-teal-700/20 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-900 transition hover:bg-teal-100"
                                 >
                                     {pickLanguage(locale, 'Open dashboard', 'Buka dasbor')}
                                 </Link>
                             ) : (
-                                <>
+                                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
                                     <Link
                                         href={route('login')}
-                                        className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-white/70 hover:text-slate-900"
+                                        className="inline-flex items-center justify-center rounded-full border border-transparent px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-white/70 hover:text-slate-900"
                                     >
                                         {pickLanguage(locale, 'Log in', 'Masuk')}
                                     </Link>
                                     <Link
                                         href={route('register')}
-                                        className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                                        className="inline-flex items-center justify-center rounded-full bg-slate-950 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
                                     >
                                         {pickLanguage(locale, 'Register', 'Daftar')}
                                     </Link>
-                                </>
+                                </div>
                             )}
                         </nav>
                     </header>

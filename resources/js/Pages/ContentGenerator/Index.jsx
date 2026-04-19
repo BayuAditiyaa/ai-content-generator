@@ -24,7 +24,7 @@ export default function Index({
     const seoDescription = pickLanguage(
         locale,
         'Generate articles, ad copy, and emails faster with ProseAI. AI Content Generator and Marketing Copywriter for modern teams.',
-        'Buat artikel, copy iklan, dan email lebih cepat dengan ProseAI. AI Content Generator dan Marketing Copywriter untuk tim modern.',
+        'Buat artikel, konten iklan, dan email lebih cepat dengan ProseAI. AI Content Generator dan Marketing Copywriter untuk tim modern.',
     );
     const seoKeywords = pickLanguage(
         locale,
