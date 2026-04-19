@@ -1,12 +1,13 @@
 import { pickLanguage } from '@/lib/ui-language';
 import { useEffect, useState } from 'react';
 import {
-    assessLengthTarget,
+    formatDurationSeconds,
     formatGenerationDuration,
     formatProvider,
     formatTemplateKey,
-    getTextStats,
-    translateContentType,
+    getSceneCount,
+    translateVideoFormat,
+    translateVideoType,
     translateTone,
 } from './helpers';
 
@@ -28,11 +29,11 @@ export default function ResultsPanel({
             <div className="result-surface glass-panel-strong rounded-[2rem] p-6 sm:p-8">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-800/70">
-                            {pickLanguage(locale, 'Output', 'Hasil')}
-                        </p>
+                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-800/70">
+                                {pickLanguage(locale, 'Output', 'Hasil')}
+                            </p>
                         <h2 className="display-title mt-3 text-3xl text-slate-900">
-                            {pickLanguage(locale, 'Selected generation', 'Generasi terpilih')}
+                            {pickLanguage(locale, 'Selected video plan', 'Video plan terpilih')}
                         </h2>
                     </div>
 
@@ -75,8 +76,8 @@ export default function ResultsPanel({
                         title={pickLanguage(locale, 'No generation selected yet', 'Belum ada generasi yang dipilih')}
                         description={pickLanguage(
                             locale,
-                            'Create your first content brief on the left to see the generated output here.',
-                            'Buat brief konten pertamamu di sisi kiri untuk melihat hasil generate di sini.',
+                            'Create your first video brief on the left to see the generated output here.',
+                            'Buat brief video pertamamu di sisi kiri untuk melihat hasil generate di sini.',
                         )}
                     />
                 )}
@@ -93,14 +94,11 @@ function ResultDetails({
     setSelectedVariationIndex,
     favoriteVariation,
 }) {
-    const selectedVariationStats = getTextStats(selectedVariation?.content ?? '');
-    const selectedLengthAssessment = assessLengthTarget(
-        selectedVariationStats,
-        selectedGeneration.length_control_type,
-        selectedGeneration.length_control_value,
-    );
     const [isContentExpanded, setIsContentExpanded] = useState(false);
-    const shouldShowContentToggle = String(selectedVariation?.content ?? '').length > 420;
+    const selectedScript = selectedVariation?.script ?? selectedVariation?.content ?? '';
+    const shouldShowContentToggle = String(selectedScript).length > 420;
+    const sceneCount = getSceneCount(selectedVariation);
+    const estimatedDuration = selectedVariation?.estimated_duration_seconds || selectedGeneration.duration_seconds;
 
     useEffect(() => {
         setIsContentExpanded(false);
@@ -109,7 +107,7 @@ function ResultDetails({
     return (
         <div className="mt-8 space-y-6">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <MetaPill label={pickLanguage(locale, 'Type', 'Jenis')} value={translateContentType(locale, selectedGeneration.content_type)} />
+                <MetaPill label={pickLanguage(locale, 'Video type', 'Jenis video')} value={translateVideoType(locale, selectedGeneration.video_type)} />
                 <MetaPill label={pickLanguage(locale, 'Tone', 'Gaya')} value={translateTone(locale, selectedGeneration.tone)} />
                 <MetaPill label={pickLanguage(locale, 'Audience', 'Audiens')} value={selectedGeneration.target_audience} />
                 <MetaPill label={pickLanguage(locale, 'Variations', 'Variasi')} value={String(selectedGeneration.variation_count ?? selectedGeneration.variations.length)} />
@@ -118,14 +116,29 @@ function ResultDetails({
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <MetaPill label={pickLanguage(locale, 'Template', 'Template')} value={formatTemplateKey(selectedGeneration.template_key)} />
                 <MetaPill
-                    label={pickLanguage(locale, 'Length target', 'Target panjang')}
-                    value={`${selectedGeneration.length_control_value} ${pickLanguage(
-                        locale,
-                        selectedGeneration.length_control_type === 'characters' ? 'characters' : 'words',
-                        selectedGeneration.length_control_type === 'characters' ? 'karakter' : 'kata',
-                    )}`}
+                    label={pickLanguage(locale, 'Duration', 'Durasi')}
+                    value={formatDurationSeconds(selectedGeneration.duration_seconds, locale)}
                 />
-                <MetaPill label={pickLanguage(locale, 'Provider', 'Provider')} value={`${formatProvider(selectedGeneration.provider)} / ${selectedGeneration.model}`} />
+                <MetaPill label={pickLanguage(locale, 'Video format', 'Format video')} value={translateVideoFormat(locale, selectedGeneration.video_format)} />
+                <MetaPill
+                    label={pickLanguage(locale, 'Provider', 'Provider')}
+                    value={`${formatProvider(selectedGeneration.provider)} / ${selectedGeneration.model}`}
+                />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <MetaPill
+                    label={pickLanguage(locale, 'Video goal', 'Tujuan video')}
+                    value={selectedGeneration.video_goal}
+                />
+                <MetaPill
+                    label={pickLanguage(locale, 'Estimated duration', 'Estimasi durasi')}
+                    value={formatDurationSeconds(estimatedDuration, locale)}
+                />
+                <MetaPill
+                    label={pickLanguage(locale, 'Scene count', 'Jumlah adegan')}
+                    value={String(sceneCount)}
+                />
                 <MetaPill
                     label={pickLanguage(locale, 'Generation time', 'Waktu generasi')}
                     value={formatGenerationDuration(selectedGeneration.generation_duration_ms, locale)}
@@ -134,7 +147,7 @@ function ResultDetails({
 
             <div className="result-topic-card rounded-[1.5rem] border border-stone-200/80 bg-white/85 p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    {pickLanguage(locale, 'Topic', 'Topik')}
+                    {pickLanguage(locale, 'Video idea', 'Ide video')}
                 </p>
                 <p className="mt-2 text-xl font-semibold text-slate-900">
                     {selectedGeneration.topic}
@@ -162,8 +175,6 @@ function ResultDetails({
                         variation={variation}
                         index={index}
                         active={selectedVariationIndex === index}
-                        lengthControlType={selectedGeneration.length_control_type}
-                        lengthControlValue={selectedGeneration.length_control_value}
                         isBest={selectedGeneration.best_variation_index === index}
                         onClick={() => setSelectedVariationIndex(index)}
                     />
@@ -179,6 +190,11 @@ function ResultDetails({
                         <p className="mt-2 text-xl font-semibold text-slate-900">
                             {selectedVariation?.title ?? pickLanguage(locale, 'Variation 1', 'Variasi 1')}
                         </p>
+                        {selectedVariation?.summary && (
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                                {selectedVariation.summary}
+                            </p>
+                        )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         {selectedGeneration.best_variation_index === selectedVariationIndex && (
@@ -204,7 +220,7 @@ function ResultDetails({
                         isContentExpanded ? 'whitespace-pre-wrap' : 'line-clamp-6 whitespace-pre-line'
                     }`}
                 >
-                    {selectedVariation?.content}
+                    {selectedScript}
                 </div>
                 {shouldShowContentToggle && (
                     <div className="mt-4">
@@ -221,21 +237,58 @@ function ResultDetails({
                 )}
                 <div className="mt-5 border-t border-stone-200 pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        {pickLanguage(locale, 'Content stats', 'Statistik konten')}
+                        {pickLanguage(locale, 'Storyboard stats', 'Statistik storyboard')}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                         <StatsBadge
-                            label={pickLanguage(locale, 'Words', 'Kata')}
-                            value={selectedVariationStats.words}
+                            label={pickLanguage(locale, 'Scenes', 'Adegan')}
+                            value={sceneCount}
                         />
                         <StatsBadge
-                            label={pickLanguage(locale, 'Characters', 'Karakter')}
-                            value={selectedVariationStats.characters}
+                            label={pickLanguage(locale, 'Duration', 'Durasi')}
+                            value={formatDurationSeconds(estimatedDuration, locale)}
                         />
-                        <TargetBadge
-                            locale={locale}
-                            assessment={selectedLengthAssessment}
+                        {selectedVariation?.hook && (
+                            <StatsBadge
+                                label={pickLanguage(locale, 'Hook', 'Hook')}
+                                value={pickLanguage(locale, 'Ready', 'Siap')}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {(selectedVariation?.hook || selectedVariation?.cta) && (
+                    <div className="mt-5 grid gap-3 md:grid-cols-2">
+                        <StoryCard
+                            title={pickLanguage(locale, 'Hook', 'Hook')}
+                            value={selectedVariation?.hook || pickLanguage(locale, 'No hook provided', 'Belum ada hook')}
                         />
+                        <StoryCard
+                            title={pickLanguage(locale, 'Call to action', 'Call to action')}
+                            value={selectedVariation?.cta || pickLanguage(locale, 'No CTA provided', 'Belum ada CTA')}
+                        />
+                    </div>
+                )}
+
+                <div className="mt-5 border-t border-stone-200 pt-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        {pickLanguage(locale, 'Scene-by-scene storyboard', 'Storyboard per adegan')}
+                    </p>
+                    <div className="mt-4 grid gap-3">
+                        {sceneCount ? (
+                            selectedVariation.scenes.map((scene) => (
+                                <SceneCard key={`${selectedVariation.title}-${scene.scene_number}`} locale={locale} scene={scene} />
+                            ))
+                        ) : (
+                            <EmptyState
+                                title={pickLanguage(locale, 'No scene breakdown yet', 'Belum ada breakdown adegan')}
+                                description={pickLanguage(
+                                    locale,
+                                    'This variation only returned a script. Try regenerating or another provider for richer storyboard output.',
+                                    'Variasi ini hanya mengembalikan skrip. Coba generate ulang atau provider lain untuk storyboard yang lebih kaya.',
+                                )}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
@@ -270,44 +323,16 @@ function StatsBadge({ label, value }) {
     );
 }
 
-function TargetBadge({ locale, assessment }) {
-    const styles = {
-        near: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-        short: 'border-amber-200 bg-amber-50 text-amber-700',
-        long: 'border-rose-200 bg-rose-50 text-rose-700',
-    };
-
-    const labels = {
-        near: pickLanguage(locale, 'Near target', 'Sesuai target'),
-        short: pickLanguage(locale, 'Too short', 'Terlalu pendek'),
-        long: pickLanguage(locale, 'Too long', 'Terlalu panjang'),
-    };
-
-    return (
-        <span
-            className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${styles[assessment.status]}`}
-        >
-            {labels[assessment.status]}
-        </span>
-    );
-}
-
 function VariationCard({
     locale,
     variation,
     index,
     active,
     onClick,
-    lengthControlType,
-    lengthControlValue,
     isBest = false,
 }) {
-    const stats = getTextStats(variation.content);
-    const assessment = assessLengthTarget(
-        stats,
-        lengthControlType,
-        lengthControlValue,
-    );
+    const sceneCount = getSceneCount(variation);
+    const estimatedDuration = variation.estimated_duration_seconds;
 
     return (
         <button
@@ -334,19 +359,57 @@ function VariationCard({
             </h3>
             <div className="mt-3 flex flex-wrap gap-2">
                 <StatsBadge
-                    label={pickLanguage(locale, 'Words', 'Kata')}
-                    value={stats.words}
+                    label={pickLanguage(locale, 'Scenes', 'Adegan')}
+                    value={sceneCount}
                 />
                 <StatsBadge
-                    label={pickLanguage(locale, 'Characters', 'Karakter')}
-                    value={stats.characters}
+                    label={pickLanguage(locale, 'Duration', 'Durasi')}
+                    value={formatDurationSeconds(estimatedDuration, locale)}
                 />
-                <TargetBadge locale={locale} assessment={assessment} />
             </div>
             <p className="mt-3 line-clamp-4 text-sm leading-6 text-slate-600">
-                {variation.content}
+                {variation.summary || variation.script || variation.content}
             </p>
         </button>
+    );
+}
+
+function StoryCard({ title, value }) {
+    return (
+        <div className="rounded-[1.25rem] border border-stone-200/80 bg-stone-50/80 px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{title}</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">{value}</p>
+        </div>
+    );
+}
+
+function SceneCard({ locale, scene }) {
+    return (
+        <div className="rounded-[1.35rem] border border-stone-200/80 bg-white/85 p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-900">
+                    {pickLanguage(locale, `Scene ${scene.scene_number}`, `Adegan ${scene.scene_number}`)}
+                </p>
+                <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700">
+                    {formatDurationSeconds(scene.duration_seconds, locale)}
+                </span>
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <SceneMeta label={pickLanguage(locale, 'Visual', 'Visual')} value={scene.visual} />
+                <SceneMeta label={pickLanguage(locale, 'Voiceover', 'Voiceover')} value={scene.voiceover} />
+                <SceneMeta label={pickLanguage(locale, 'On-screen text', 'Teks layar')} value={scene.onscreen_text} />
+                <SceneMeta label={pickLanguage(locale, 'Transition', 'Transisi')} value={scene.transition} />
+            </div>
+        </div>
+    );
+}
+
+function SceneMeta({ label, value }) {
+    return (
+        <div className="rounded-2xl border border-stone-200/80 bg-stone-50/70 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{value || '-'}</p>
+        </div>
     );
 }
 

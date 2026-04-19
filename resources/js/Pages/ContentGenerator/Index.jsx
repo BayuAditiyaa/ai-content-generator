@@ -23,13 +23,13 @@ export default function Index({
     const { flash, ai, errors, preferences } = usePage().props;
     const seoDescription = pickLanguage(
         locale,
-        'Generate articles, ad copy, and emails faster with ProseAI. AI Content Generator and Marketing Copywriter for modern teams.',
-        'Buat artikel, konten iklan, dan email lebih cepat dengan ProseAI. AI Content Generator dan Marketing Copywriter untuk tim modern.',
+        'Plan marketing videos, reels, and educational clips faster with ProseAI. AI video planning, script, and storyboard generation for modern teams.',
+        'Rencanakan video marketing, reel, dan klip edukasi lebih cepat dengan ProseAI. Generator perencanaan video, skrip, dan storyboard untuk tim modern.',
     );
     const seoKeywords = pickLanguage(
         locale,
-        'ProseAI, AI Content Generator, Marketing Copywriter, How to create ad copywriting automatically, Fast blog article generator tool built with Laravel, Best AI recommendation for writing office emails',
-        'ProseAI, AI Content Generator, Marketing Copywriter, Cara membuat copywriting iklan otomatis, Alat pembuat artikel blog cepat dengan Laravel, Rekomendasi AI untuk menulis email kantor',
+        'ProseAI, AI Video Planning Tool, Video Script Generator, Storyboard Generator, Marketing Video Planner',
+        'ProseAI, AI Video Planning Tool, Generator Skrip Video, Generator Storyboard, Perencana Video Marketing',
     );
     const generationList = generations.data ?? [];
     const templates = formOptions.templates ?? [];
@@ -41,18 +41,17 @@ export default function Index({
     const { data, setData, post, processing, reset } = useForm({
         template_key: templates[0]?.key ?? 'blank',
         ui_language: preferences.preferred_output_language ?? locale,
-        content_type: formOptions.contentTypes[0] ?? 'Blog Post',
+        video_type: formOptions.videoTypes[0] ?? 'Marketing Video',
         topic: '',
         keywords: '',
         target_audience: '',
         tone: formOptions.tones[0] ?? 'Professional',
-        content_goal: formOptions.contentGoals?.[0] ?? 'Awareness',
-        output_format: formOptions.outputFormats?.[0] ?? 'Paragraph',
+        video_goal: formOptions.videoGoals?.[0] ?? 'Awareness',
+        video_format: formOptions.videoFormats?.[0] ?? 'Storyboard',
         cta_style: formOptions.ctaStyles?.[0] ?? 'Soft',
         custom_instruction: '',
         variation_count: formOptions.variationCounts?.[1] ?? 2,
-        length_control_type: formOptions.lengthControlTypes?.[0] ?? 'words',
-        length_control_value: formOptions.lengthControlPresets?.[2] ?? 250,
+        duration_seconds: formOptions.durationPresets?.[1] ?? 30,
     });
     const topicCharacterCount = String(data.topic ?? '').length;
 
@@ -150,11 +149,12 @@ export default function Index({
 
         setData((current) => ({
             ...current,
-            content_type: selectedTemplate.content_type ?? current.content_type,
+            video_type: selectedTemplate.video_type ?? current.video_type,
             topic: limitCharacters(localizedTopic, 200),
             keywords: localizedKeywords,
             target_audience: localizedAudience,
             tone: selectedTemplate.tone ?? current.tone,
+            duration_seconds: selectedTemplate.duration_seconds ?? current.duration_seconds,
         }));
     }, [locale, selectedTemplate, setData]);
 
@@ -167,18 +167,17 @@ export default function Index({
             ...current,
             template_key: prefillGeneration.template_key ?? templates[0]?.key ?? 'blank',
             ui_language: prefillGeneration.ui_language ?? locale,
-            content_type: prefillGeneration.content_type,
+            video_type: prefillGeneration.video_type,
             topic: limitCharacters(prefillGeneration.topic, 200),
             keywords: (prefillGeneration.keywords ?? []).join(', '),
             target_audience: prefillGeneration.target_audience,
             tone: prefillGeneration.tone,
-            content_goal: prefillGeneration.content_goal ?? formOptions.contentGoals?.[0] ?? 'Awareness',
-            output_format: prefillGeneration.output_format ?? formOptions.outputFormats?.[0] ?? 'Paragraph',
+            video_goal: prefillGeneration.video_goal ?? formOptions.videoGoals?.[0] ?? 'Awareness',
+            video_format: prefillGeneration.video_format ?? formOptions.videoFormats?.[0] ?? 'Storyboard',
             cta_style: prefillGeneration.cta_style ?? formOptions.ctaStyles?.[0] ?? 'Soft',
             custom_instruction: prefillGeneration.custom_instruction ?? '',
             variation_count: prefillGeneration.variation_count ?? formOptions.variationCounts?.[1] ?? 2,
-            length_control_type: prefillGeneration.length_control_type ?? 'words',
-            length_control_value: prefillGeneration.length_control_value ?? 250,
+            duration_seconds: prefillGeneration.duration_seconds ?? formOptions.durationPresets?.[1] ?? 30,
         }));
 
         if (prefillGeneration.id) {
@@ -209,32 +208,31 @@ export default function Index({
                     'target_audience',
                     'custom_instruction',
                     'variation_count',
-                    'length_control_type',
-                    'length_control_value',
+                    'duration_seconds',
                 );
 
                 setData((current) => ({
                     ...current,
                     template_key: templates[0]?.key ?? 'blank',
                     ui_language: locale,
-                    content_type: formOptions.contentTypes[0] ?? 'Blog Post',
+                    video_type: formOptions.videoTypes[0] ?? 'Marketing Video',
                     tone: formOptions.tones[0] ?? 'Professional',
-                    content_goal: formOptions.contentGoals?.[0] ?? 'Awareness',
-                    output_format: formOptions.outputFormats?.[0] ?? 'Paragraph',
+                    video_goal: formOptions.videoGoals?.[0] ?? 'Awareness',
+                    video_format: formOptions.videoFormats?.[0] ?? 'Storyboard',
                     cta_style: formOptions.ctaStyles?.[0] ?? 'Soft',
                     custom_instruction: '',
                     variation_count: formOptions.variationCounts?.[1] ?? 2,
-                    length_control_type: formOptions.lengthControlTypes?.[0] ?? 'words',
-                    length_control_value: formOptions.lengthControlPresets?.[2] ?? 250,
+                    duration_seconds: formOptions.durationPresets?.[1] ?? 30,
                 }));
             },
         });
     };
 
     const copyContent = async () => {
-        if (!selectedVariation?.content) return;
+        const exportable = selectedVariation?.script ?? selectedVariation?.content;
+        if (!exportable) return;
 
-        await navigator.clipboard.writeText(selectedVariation.content);
+        await navigator.clipboard.writeText(exportable);
         setToast({
             type: 'success',
             text: pickLanguage(
@@ -251,7 +249,7 @@ export default function Index({
         const combined = selectedGeneration.variations
             .map(
                 (variation, index) =>
-                    `${pickLanguage(locale, `Variation ${index + 1}`, `Variasi ${index + 1}`)}: ${variation.title}\n\n${variation.content}`,
+                    `${pickLanguage(locale, `Variation ${index + 1}`, `Variasi ${index + 1}`)}: ${variation.title}\n\n${variation.script ?? variation.content}`,
             )
             .join('\n\n--------------------\n\n');
 
@@ -274,18 +272,17 @@ export default function Index({
             ...current,
             template_key: generation.template_key ?? templates[0]?.key ?? 'blank',
             ui_language: generation.ui_language ?? locale,
-            content_type: generation.content_type,
+            video_type: generation.video_type,
             topic: limitCharacters(generation.topic, 200),
             keywords: (generation.keywords ?? []).join(', '),
             target_audience: generation.target_audience,
             tone: generation.tone,
-            content_goal: generation.content_goal ?? formOptions.contentGoals?.[0] ?? 'Awareness',
-            output_format: generation.output_format ?? formOptions.outputFormats?.[0] ?? 'Paragraph',
+            video_goal: generation.video_goal ?? formOptions.videoGoals?.[0] ?? 'Awareness',
+            video_format: generation.video_format ?? formOptions.videoFormats?.[0] ?? 'Storyboard',
             cta_style: generation.cta_style ?? formOptions.ctaStyles?.[0] ?? 'Soft',
             custom_instruction: generation.custom_instruction ?? '',
             variation_count: generation.variation_count ?? formOptions.variationCounts?.[1] ?? 2,
-            length_control_type: generation.length_control_type ?? 'words',
-            length_control_value: generation.length_control_value ?? 250,
+            duration_seconds: generation.duration_seconds ?? formOptions.durationPresets?.[1] ?? 30,
         }));
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setToast({
@@ -314,7 +311,7 @@ export default function Index({
         <AuthenticatedLayout
             header={<HeaderBlock locale={locale} ai={ai} />}
         >
-            <Head title={pickLanguage(locale, 'Content Generator', 'Generator Konten')}>
+            <Head title={pickLanguage(locale, 'Video Planner', 'Perencana Video')}>
                 <meta name="description" content={seoDescription} />
                 <meta name="keywords" content={seoKeywords} />
                 <meta property="og:description" content={seoDescription} />
@@ -334,7 +331,7 @@ export default function Index({
                         <StatCard
                             label={pickLanguage(locale, 'Latest topic', 'Topik terbaru')}
                             value={latestStats.latest_topic ?? pickLanguage(locale, 'No generations yet', 'Belum ada generasi')}
-                            detail={pickLanguage(locale, 'Most recent content brief', 'Brief konten paling terbaru')}
+                            detail={pickLanguage(locale, 'Most recent video brief', 'Brief video paling terbaru')}
                         />
                         <StatCard
                             label={pickLanguage(locale, 'Last activity', 'Aktivitas terakhir')}

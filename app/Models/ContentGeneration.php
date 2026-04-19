@@ -21,6 +21,7 @@ class ContentGeneration extends Model
         'output_format',
         'cta_style',
         'custom_instruction',
+        'duration_seconds',
         'length_control_type',
         'length_control_value',
         'variation_count',
@@ -40,6 +41,7 @@ class ContentGeneration extends Model
             'variations' => 'array',
             'best_variation_index' => 'integer',
             'generation_duration_ms' => 'integer',
+            'duration_seconds' => 'integer',
         ];
     }
 

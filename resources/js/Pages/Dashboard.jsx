@@ -4,14 +4,14 @@ import { Head } from '@inertiajs/react';
 export default function Dashboard() {
     const stats = [
         {
-            label: 'Prompt drafts',
+            label: 'Video briefs',
             value: '12',
-            detail: 'Ready to turn into templates',
+            detail: 'Ready to turn into storyboard templates',
         },
         {
-            label: 'Saved generations',
+            label: 'Saved video plans',
             value: '48',
-            detail: 'Content history will live here',
+            detail: 'Video history will live here',
         },
         {
             label: 'Average delivery time',
@@ -24,17 +24,17 @@ export default function Dashboard() {
         {
             title: 'Collect prompt details',
             description:
-                'Add form inputs for topic, audience, tone, and keywords with clean validation.',
+                'Add form inputs for video type, audience, tone, keywords, and duration with clean validation.',
         },
         {
-            title: 'Generate with LLM',
+            title: 'Generate video scripts',
             description:
-                'Connect your API call, loading state, and response formatting inside Inertia pages.',
+                'Connect your API call, loading state, scene breakdown, and storyboard formatting inside Inertia pages.',
         },
         {
             title: 'Save and reuse',
             description:
-                'Store generations, add search, copy actions, and lightweight export options.',
+                'Store video plans, add search, copy actions, and lightweight export options.',
         },
     ];
 
@@ -46,14 +46,14 @@ export default function Dashboard() {
                         <span className="eyebrow">Project cockpit</span>
                         <div>
                             <h1 className="display-title text-balance text-4xl text-slate-900 sm:text-5xl">
-                                Your AI content generator now has a
+                                Your AI video generator now has a
                                 production-ready shell.
                             </h1>
                             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
                                 Auth is wired up, Inertia React is ready, and
                                 the interface already supports a strong demo
                                 story. Next we can plug in generation flows,
-                                history, and exports.
+                                history, storyboard previews, and exports.
                             </p>
                         </div>
                     </div>
@@ -63,7 +63,7 @@ export default function Dashboard() {
                             Suggested next milestone
                         </p>
                         <p className="mt-3 text-lg font-semibold text-slate-900">
-                            Build the content generation form page
+                            Build the video generation form page
                         </p>
                         <p className="mt-2 text-sm leading-6 text-slate-600">
                             This will unlock the strongest demo path fastest:
@@ -146,7 +146,7 @@ export default function Dashboard() {
                                     {[
                                         'Register',
                                         'Fill prompt',
-                                        'Generate copy',
+                                        'Generate video',
                                         'Save result',
                                     ].map((item) => (
                                         <div

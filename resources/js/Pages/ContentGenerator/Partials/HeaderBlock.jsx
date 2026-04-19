@@ -4,20 +4,20 @@ export default function HeaderBlock({ locale, ai }) {
     return (
         <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
             <div className="space-y-4">
-                <span className="eyebrow">AI Content Generator</span>
+                <span className="eyebrow">AI Video Planner</span>
                 <div>
                     <h1 className="display-title text-balance text-4xl text-slate-900 sm:text-5xl">
                         {pickLanguage(
                             locale,
-                            'Generate polished copy, control length, and compare multiple content angles in one place.',
-                            'Buat copy yang rapi, atur panjang output, dan bandingkan beberapa sudut konten dalam satu tempat.',
+                            'Generate scripts, storyboard scenes, and multiple video angles in one place.',
+                            'Buat skrip, adegan storyboard, dan beberapa sudut video dalam satu tempat.',
                         )}
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
                         {pickLanguage(
                             locale,
-                            'Use ready-made templates, tune word or character targets, then save, copy, and export the best result.',
-                            'Gunakan template siap pakai, atur target kata atau karakter, lalu simpan, salin, dan ekspor hasil terbaik.',
+                            'Use ready-made templates, set duration and format, then save, copy, and export the best video plan.',
+                            'Gunakan template siap pakai, atur durasi dan format, lalu simpan, salin, dan ekspor video plan terbaik.',
                         )}
                     </p>
                 </div>
@@ -36,13 +36,13 @@ export default function HeaderBlock({ locale, ai }) {
                     {!ai.configured
                         ? pickLanguage(
                               locale,
-                              'Add AI_CONTENT_API_KEY in .env before generating content.',
-                              'Tambahkan AI_CONTENT_API_KEY di .env sebelum membuat konten.',
+                              'Add AI_CONTENT_API_KEY in .env before generating video plans.',
+                              'Tambahkan AI_CONTENT_API_KEY di .env sebelum membuat video plan.',
                           )
                         : pickLanguage(
                               locale,
-                              'The generator is ready for template-based requests and fallback providers.',
-                              'Generator siap untuk request berbasis template dan provider fallback.',
+                              'The generator is ready for storyboard requests, video scripts, and fallback providers.',
+                              'Generator siap untuk request storyboard, skrip video, dan provider fallback.',
                           )}
                 </p>
                 {ai.fallback_enabled && (

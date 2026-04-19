@@ -26,7 +26,7 @@ export default function GuestLayout({ children }) {
                                     ProseAI
                                 </p>
                                 <p className="display-title text-xl text-stone-50">
-                                    AI Content Generator
+                                    AI Video Planner
                                 </p>
         </div>
     </Link>
@@ -105,7 +105,7 @@ export default function GuestLayout({ children }) {
                                             ProseAI
                                         </p>
                                         <p className="display-title text-2xl text-slate-900">
-                                            AI Content Generator & Marketing Copywriter
+                                            AI Video Planning & Storyboard Writer
                                         </p>
                                     </div>
                                 </Link>

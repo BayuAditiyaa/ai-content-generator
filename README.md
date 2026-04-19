@@ -1,34 +1,91 @@
 # ProseAI
 
-**AI Content Generator & Marketing Copywriter**
+**AI Video Planning, Script, and Storyboard Generator**
 
-ProseAI adalah aplikasi web untuk membantu pengguna membuat artikel, copy iklan, caption, deskripsi produk, dan email lebih cepat dengan bantuan AI. Project ini dibangun dengan **Laravel 12**, **Inertia.js**, dan **React 18**, dengan fokus pada UI yang modern, responsif, dan nyaman digunakan.
+ProseAI is a web application that helps users turn a simple brief into a structured video plan with the help of AI. Instead of rendering full video files, the app focuses on the pre-production workflow: generating video concepts, hooks, summaries, scripts, scene-by-scene storyboards, and CTA ideas in a fast, usable interface.
 
-## Highlights
+## What ProseAI Does
 
-- Generate konten AI untuk berbagai kebutuhan marketing dan writing
-- Multi-variation output untuk membandingkan beberapa hasil sekaligus
-- Template konten siap pakai untuk use case umum
-- Kontrol target panjang berdasarkan kata atau karakter
-- Favorite / best variation selection
-- Regenerate brief dengan cepat
-- Export hasil ke `.txt`
-- Riwayat generasi di halaman terpisah
-- Dukungan bilingual UI: **Bahasa Indonesia** dan **English**
-- Dukungan provider AI utama + fallback
-- Dark mode dan light mode
+- Generate AI-assisted video concepts from a structured brief
+- Produce multiple variations from a single prompt
+- Build script + storyboard outputs for each variation
+- Save, search, revisit, favorite, regenerate, and export results
+- Support bilingual UI in English and Bahasa Indonesia
+- Use a primary AI provider with fallback support
 
-## Screens & Flow
+## Important Scope Note
 
-Alur utama aplikasi:
+ProseAI is **not** a full video rendering platform.
 
-1. Login atau register
-2. Pilih template konten
-3. Isi brief
-4. Generate beberapa variasi
-5. Pilih hasil terbaik
-6. Simpan, export, atau regenerate
-7. Kelola riwayat di halaman `History`
+It currently generates:
+- video ideas
+- video summaries
+- opening hooks
+- narration scripts
+- CTA lines
+- scene-by-scene storyboard breakdowns
+
+It does **not** currently generate downloadable rendered `.mp4` videos.
+
+This is an intentional product decision to keep the project practical, affordable, and realistic to operate with a low or zero-cost AI workflow.
+
+## Main Flow
+
+1. Register or log in
+2. Choose a video template or start from scratch
+3. Fill in the brief:
+   - video type
+   - topic
+   - keywords
+   - target audience
+   - tone
+   - goal
+   - format
+   - CTA style
+   - duration
+4. Generate 1-3 variations
+5. Review the script and storyboard scenes
+6. Mark the best variation
+7. Export the result as `.txt` or revisit it later in history
+
+## Core Features
+
+### Video Planning
+
+- Video brief form
+- Video type selection
+- Tone and audience targeting
+- Duration presets
+- Goal and format controls
+- Custom instruction support
+- Video-oriented templates
+
+### Output Review
+
+- Multiple AI variations
+- Summary, hook, and CTA output
+- Script output
+- Scene-by-scene storyboard cards
+- Best variation selection
+- Copy and export actions
+
+### History and Management
+
+- Saved video-plan history
+- Search and filter
+- Provider filter
+- Favorite filter
+- Regenerate existing brief
+- Reopen and edit previous brief
+- Delete saved results
+
+### UX
+
+- Responsive layout
+- Dark/light mode
+- English/Indonesian toggle
+- Loading states and skeletons
+- Provider/model indicators
 
 ## Tech Stack
 
@@ -36,78 +93,18 @@ Alur utama aplikasi:
 - **Frontend:** Inertia.js + React 18
 - **Styling:** Tailwind CSS
 - **Auth:** Laravel Breeze
-- **Database:** SQLite untuk local development
-- **AI Providers:** Google Gemini sebagai primary, Groq sebagai fallback
-
-## Main Features
-
-### Content Generation
-
-- Content type selection
-- Tone selection
-- Audience targeting
-- Custom instruction
-- CTA style
-- Output format
-- Content goal
-- Multi-variation generation
-
-### Productivity Features
-
-- Copy single result
-- Copy all variations
-- Export `.txt`
-- Edit brief from previous result
-- Regenerate content
-- Best variation marker
-
-### History Management
-
-- Search
-- Provider filter
-- Favorites filter
-- Re-open result
-- Delete saved generations
-
-### UX Features
-
-- Responsive layout
-- Bilingual interface
-- Loading states and skeletons
-- Provider indicator
-- Generation duration display
-- Word / character stats
-
-## SEO Copy
-
-Meta description yang digunakan:
-
-> Hasilkan artikel, copy iklan, dan email dalam hitungan detik dengan ProseAI. AI Content Generator terbaik untuk marketer dan penulis profesional.
-
-Long-tail keywords:
-
-- Cara membuat copywriting iklan otomatis
-- Alat pembuat artikel blog cepat dengan Laravel
-- Rekomendasi AI untuk menulis email kantor
-- How to create ad copywriting automatically
-- Fast blog article generator tool built with Laravel
-- Best AI recommendation for writing office emails
+- **Database:** SQLite for local development, MySQL-ready for production
+- **AI Providers:** Google Gemini as primary, Groq as fallback
 
 ## AI Disclosure
 
-Project ini adalah **program hasil bantuan AI**.
+This project was developed using an **AI-assisted workflow**.
 
-Penjelasan singkat:
-
-- ide, struktur fitur, dan sebagian implementasi dikembangkan dengan bantuan AI assistant
-- project tetap perlu ditinjau, diuji, dan divalidasi secara manual sebelum dipakai di production
-- API key, keamanan, dan deployment tetap menjadi tanggung jawab developer
-
-Jika kamu ingin mengunggah project ini ke GitHub atau mempresentasikannya, bagian ini membantu memberi konteks yang jujur bahwa aplikasi dibuat dengan **AI-assisted development workflow**.
+That means AI tools were used during ideation, implementation, refinement, and debugging. The final project structure, logic, testing, and deployment preparation were still reviewed and adjusted manually.
 
 ## Local Setup
 
-### 1. Clone project
+### 1. Clone the project
 
 ```bash
 git clone https://github.com/your-username/proseai.git
@@ -128,17 +125,15 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-### 4. Set database
+### 4. Set up the database
 
-Project ini menggunakan SQLite untuk local development. Pastikan file database tersedia lalu jalankan migration:
+For local development, SQLite is recommended:
 
 ```bash
 php artisan migrate
 ```
 
-### 5. Configure AI provider
-
-Isi `.env` dengan provider utama dan fallback:
+### 5. Configure AI providers
 
 ```env
 AI_CONTENT_PROVIDER=gemini
@@ -161,9 +156,7 @@ AI_CONTENT_FALLBACK_API_KEY=YOUR_GROQ_API_KEY
 composer dev
 ```
 
-## Test & Build
-
-Untuk testing dan build:
+## Test and Build
 
 ```bash
 php artisan test
@@ -172,25 +165,23 @@ npm run build
 
 ## Production Notes
 
-- Jangan commit API key ke repository publik
-- Rotate API key sebelum deploy jika key pernah dipakai selama development
-- Gunakan queue / logging / rate limiting jika aplikasi akan dipakai lebih luas
-- Review kembali output AI sebelum digunakan untuk kebutuhan bisnis nyata
+- Do not commit API keys to a public repository
+- Rotate API keys before production if they were exposed during development
+- Review AI output before real business use
+- If you later want real video rendering, treat it as a separate paid upgrade with a dedicated video API provider
 
 ## Suggested GitHub Topics
-
-Kalau mau, kamu bisa tambahkan topic GitHub seperti:
 
 - `laravel`
 - `react`
 - `inertiajs`
 - `tailwindcss`
-- `ai-content-generator`
-- `copywriting`
-- `marketing-tools`
+- `ai-video-planning`
+- `storyboard-generator`
+- `video-script-generator`
 - `gemini-api`
 - `groq`
 
 ## License
 
-Project ini bisa kamu sesuaikan lisensinya sesuai kebutuhan. Jika belum ada preferensi, kamu bisa memakai lisensi `MIT`.
+Use the license that fits your needs. If you do not have a preference yet, `MIT` is a reasonable default.

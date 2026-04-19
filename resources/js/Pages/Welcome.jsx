@@ -10,13 +10,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
     const { theme, setTheme } = useUiTheme();
     const seoDescription = pickLanguage(
         locale,
-        'Generate articles, ad copy, and emails in seconds with ProseAI. The best AI Content Generator for marketers and professional writers.',
-        'Hasilkan artikel, copy iklan, dan email dalam hitungan detik dengan ProseAI. AI Content Generator terbaik untuk marketer dan penulis profesional',
+        'Plan marketing videos, educational clips, and social media reels in seconds with ProseAI. AI video planning, script, and storyboard generation for modern teams.',
+        'Rencanakan video marketing, klip edukasi, dan reel media sosial dalam hitungan detik dengan ProseAI. Generator perencanaan video, skrip, dan storyboard untuk tim modern.',
     );
     const seoKeywords = pickLanguage(
         locale,
-        'ProseAI, AI Content Generator, Marketing Copywriter, How to create ad copywriting automatically, Fast blog article generator tool built with Laravel, Best AI recommendation for writing office emails',
-        'ProseAI, AI Content Generator, Marketing Copywriter, Cara membuat copywriting iklan otomatis, Alat pembuat artikel blog cepat dengan Laravel, Rekomendasi AI untuk menulis email kantor',
+        'ProseAI, AI Video Planning Tool, Video Script Generator, Storyboard Generator, Marketing Video Planner',
+        'ProseAI, AI Video Planning Tool, Generator Skrip Video, Generator Storyboard, Perencana Video Marketing',
     );
     const features = [
         {
@@ -27,20 +27,20 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
             ),
             description: pickLanguage(
                 locale,
-                'Generate up to three writing angles from one brief so the user can compare hooks quickly.',
-                'Hasilkan hingga tiga sudut penulisan dari satu brief agar pengguna bisa membandingkan hook dengan cepat.',
+                'Generate up to three video concepts from one brief so users can compare hooks, scripts, and scenes quickly.',
+                'Hasilkan hingga tiga konsep video dari satu brief agar pengguna bisa membandingkan hook, skrip, dan adegan dengan cepat.',
             ),
         },
         {
             title: pickLanguage(
                 locale,
-                'Saved content history',
-                'Riwayat konten tersimpan',
+                'Saved video history',
+                'Riwayat video tersimpan',
             ),
             description: pickLanguage(
                 locale,
-                'Every result is stored in the database and can be searched, revisited, copied, or removed.',
-                'Setiap hasil disimpan ke database dan bisa dicari, dibuka lagi, disalin, atau dihapus.',
+                'Every video plan is stored in the database and can be searched, revisited, exported, or removed.',
+                'Setiap video plan disimpan ke database dan bisa dicari, dibuka lagi, diekspor, atau dihapus.',
             ),
         },
         {
@@ -88,7 +88,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     ProseAI
                                 </p>
                                 <p className="display-title truncate text-lg text-slate-900 sm:text-xl">
-                                    AI Content Generator
+                                    AI Video Planner
                                 </p>
                             </div>
                         </Link>
@@ -134,15 +134,15 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     <h1 className="display-title text-balance text-5xl leading-[0.94] text-slate-900 sm:text-6xl lg:text-7xl">
                                         {pickLanguage(
                                             locale,
-                                            'Build stronger content faster, then compare the best variations side by side.',
-                                            'Buat konten yang lebih kuat lebih cepat, lalu bandingkan variasi terbaik secara berdampingan.',
+                                            'Plan stronger video concepts faster, then compare the best scripts and storyboards side by side.',
+                                            'Rencanakan konsep video yang lebih kuat lebih cepat, lalu bandingkan skrip dan storyboard terbaik secara berdampingan.',
                                         )}
                                     </h1>
                                     <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600">
                                         {pickLanguage(
                                             locale,
-                                            'ProseAI helps you generate articles, ad copy, and emails in seconds with an AI Content Generator and Marketing Copywriter workflow built for modern teams.',
-                                            'ProseAI membantu Anda membuat artikel, teks iklan, dan email dalam hitungan detik berkat Generator Konten AI dan alur kerja Penulis Iklan Pemasaran yang dirancang khusus untuk tim modern.',
+                                            'ProseAI helps you turn one brief into video summaries, hooks, scripts, CTA ideas, and storyboard scenes in seconds with a workflow built for modern teams.',
+                                            'ProseAI membantu Anda mengubah satu brief menjadi ringkasan video, hook, skrip, ide CTA, dan adegan storyboard dalam hitungan detik dengan workflow yang dirancang untuk tim modern.',
                                         )}
                                     </p>
                                 </div>
@@ -203,8 +203,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                             <h2 className="mt-3 display-title text-3xl text-stone-50">
                                                 {pickLanguage(
                                                     locale,
-                                                    'Write three launch email variations for a productivity app.',
-                                                    'Tulis tiga variasi email peluncuran untuk aplikasi produktivitas.',
+                                                    'Create three launch video concepts for a productivity app.',
+                                                    'Buat tiga konsep video peluncuran untuk aplikasi produktivitas.',
                                                 )}
                                             </h2>
                                             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -219,7 +219,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                                     ],
                                                     [
                                                         pickLanguage(locale, 'Format', 'Format'),
-                                                        pickLanguage(locale, 'Email copy', 'Copy email'),
+                                                        pickLanguage(locale, 'Storyboard', 'Storyboard'),
                                                     ],
                                                     [
                                                         pickLanguage(locale, 'Variations', 'Variasi'),

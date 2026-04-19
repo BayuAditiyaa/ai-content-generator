@@ -2,10 +2,12 @@ import DangerButton from '@/Components/DangerButton';
 import { Link } from '@inertiajs/react';
 import { pickLanguage } from '@/lib/ui-language';
 import {
+    formatDurationSeconds,
     formatGenerationDuration,
     formatProvider,
     formatTemplateKey,
-    translateContentType,
+    getSceneCount,
+    translateVideoType,
 } from './helpers';
 
 export default function HistoryList({
@@ -30,8 +32,8 @@ export default function HistoryList({
                                     <div className="min-w-0">
                                         <p className="text-sm font-semibold text-slate-900">
                                             {deletingId === generation.id
-                                                ? pickLanguage(locale, 'Deleting content...', 'Menghapus konten...')
-                                                : pickLanguage(locale, 'Regenerating content...', 'Sedang generate ulang konten...')}
+                                                ? pickLanguage(locale, 'Deleting video plan...', 'Menghapus video plan...')
+                                                : pickLanguage(locale, 'Regenerating video plan...', 'Sedang generate ulang video plan...')}
                                         </p>
                                         <p className="text-xs text-slate-500">
                                             {deletingId === generation.id
@@ -45,16 +47,14 @@ export default function HistoryList({
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <Tag>{translateContentType(locale, generation.content_type)}</Tag>
+                                    <Tag>{translateVideoType(locale, generation.video_type)}</Tag>
                                     <Tag tone="warm">
-                                        {generation.length_control_value}{' '}
-                                        {pickLanguage(
-                                            locale,
-                                            generation.length_control_type === 'characters' ? 'characters' : 'words',
-                                            generation.length_control_type === 'characters' ? 'karakter' : 'kata',
-                                        )}
+                                        {formatDurationSeconds(generation.duration_seconds, locale)}
                                     </Tag>
                                     <Tag>{formatProvider(generation.provider)}</Tag>
+                                    <Tag tone="warm">
+                                        {pickLanguage(locale, `${getSceneCount(generation.variations?.[generation.best_variation_index ?? 0] ?? generation.variations?.[0])} scenes`, `${getSceneCount(generation.variations?.[generation.best_variation_index ?? 0] ?? generation.variations?.[0])} adegan`)}
+                                    </Tag>
                                     {generation.best_variation_index !== null && (
                                         <Tag tone="favorite">{pickLanguage(locale, 'Favorite', 'Favorit')}</Tag>
                                     )}
@@ -69,7 +69,7 @@ export default function HistoryList({
                                     <span>{formatGenerationDuration(generation.generation_duration_ms, locale)}</span>
                                 </div>
                                 <p className="mt-4 line-clamp-4 text-sm leading-7 text-slate-600">
-                                    {generation.generated_content}
+                                    {generation.variations?.[generation.best_variation_index ?? 0]?.summary ?? generation.generated_content}
                                 </p>
                                 <div className="mt-4 flex flex-wrap gap-2">
                                     {generation.keywords.slice(0, 4).map((keyword) => (
@@ -137,9 +137,9 @@ export function HistorySkeleton({ locale, mode = 'filter' }) {
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-teal-200 border-t-teal-700" />
                 <p className="text-sm font-semibold text-slate-700">
                     {mode === 'delete'
-                        ? pickLanguage(locale, 'Deleting content...', 'Menghapus konten...')
+                        ? pickLanguage(locale, 'Deleting video plan...', 'Menghapus video plan...')
                         : mode === 'regenerate'
-                          ? pickLanguage(locale, 'Regenerating content...', 'Sedang generate ulang konten...')
+                          ? pickLanguage(locale, 'Regenerating video plan...', 'Sedang generate ulang video plan...')
                           : pickLanguage(locale, 'Applying filters...', 'Menerapkan filter...')}
                 </p>
             </div>

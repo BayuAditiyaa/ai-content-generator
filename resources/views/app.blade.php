@@ -5,11 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta
             name="description"
-            content="Generate articles, ad copy, and emails in seconds with ProseAI. The best AI Content Generator for marketers and professional writers."
+            content="Plan marketing videos, educational clips, and social media reels in seconds with ProseAI. AI video planning, script, and storyboard generation for modern teams."
         >
         <meta
             name="keywords"
-            content="ProseAI, AI Content Generator, Marketing Copywriter, How to create ad copywriting automatically, Fast blog article generator tool built with Laravel, Best AI recommendation for writing office emails"
+            content="ProseAI, AI Video Planning Tool, Video Script Generator, Storyboard Generator, Marketing Video Planner"
         >
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>

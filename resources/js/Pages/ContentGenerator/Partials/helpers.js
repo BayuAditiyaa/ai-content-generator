@@ -1,13 +1,13 @@
 import { pickLanguage } from '@/lib/ui-language';
 
-export function translateContentType(locale, value) {
+export function translateVideoType(locale, value) {
     const labels = {
-        'Blog Post': 'Artikel Blog',
-        Email: 'Email',
-        'Ad Copy': 'Copy Iklan',
-        'Social Media Post': 'Postingan Media Sosial',
-        'Product Description': 'Deskripsi Produk',
-        'Educational Content': 'Konten Edukasi',
+        'Marketing Video': 'Video Marketing',
+        'Educational Clip': 'Klip Edukasi',
+        'Social Media Reel': 'Reel Media Sosial',
+        'Product Explainer': 'Video Penjelasan Produk',
+        'Testimonial Video': 'Video Testimoni',
+        'Brand Story Video': 'Video Cerita Brand',
     };
 
     return locale === 'id' ? labels[value] ?? value : value;
@@ -35,6 +35,28 @@ export function formatTemplateKey(value) {
         .split('-')
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ');
+}
+
+export function translateVideoFormat(locale, value) {
+    const labels = {
+        'Talking Head': 'Talking Head',
+        Storyboard: 'Storyboard',
+        Slideshow: 'Slideshow',
+        'UGC Style': 'Gaya UGC',
+        'Voiceover Ad': 'Iklan Voiceover',
+    };
+
+    return locale === 'id' ? labels[value] ?? value : value;
+}
+
+export function formatDurationSeconds(value, locale) {
+    const duration = Number(value) || 0;
+
+    if (duration <= 0) {
+        return pickLanguage(locale, 'Not specified', 'Belum ditentukan');
+    }
+
+    return pickLanguage(locale, `${duration}s`, `${duration} dtk`);
 }
 
 export function formatGenerationDuration(value, locale) {
@@ -75,25 +97,6 @@ export function limitCharacters(value, maxCharacters) {
     return String(value ?? '').slice(0, maxCharacters);
 }
 
-export function assessLengthTarget(stats, lengthControlType, lengthControlValue) {
-    const target = Number(lengthControlValue) || 0;
-    const measuredValue =
-        lengthControlType === 'characters' ? stats.characters : stats.words;
-
-    if (target <= 0) {
-        return { status: 'near' };
-    }
-
-    const lowerBound = target * 0.85;
-    const upperBound = target * 1.15;
-
-    if (measuredValue < lowerBound) {
-        return { status: 'short' };
-    }
-
-    if (measuredValue > upperBound) {
-        return { status: 'long' };
-    }
-
-    return { status: 'near' };
+export function getSceneCount(variation) {
+    return Array.isArray(variation?.scenes) ? variation.scenes.length : 0;
 }

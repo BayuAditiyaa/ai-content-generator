@@ -47,13 +47,13 @@ class ContentGenerationController extends Controller
 
         return Inertia::render('ContentGenerator/Index', [
             'formOptions' => [
-                'contentTypes' => [
-                    'Blog Post',
-                    'Email',
-                    'Ad Copy',
-                    'Social Media Post',
-                    'Product Description',
-                    'Educational Content',
+                'videoTypes' => [
+                    'Marketing Video',
+                    'Educational Clip',
+                    'Social Media Reel',
+                    'Product Explainer',
+                    'Testimonial Video',
+                    'Brand Story Video',
                 ],
                 'tones' => [
                     'Professional',
@@ -64,10 +64,9 @@ class ContentGenerationController extends Controller
                     'Confident',
                 ],
                 'variationCounts' => [1, 2, 3],
-                'lengthControlTypes' => ['words', 'characters'],
-                'lengthControlPresets' => [100, 150, 250, 500, 1000],
-                'contentGoals' => ['Awareness', 'Engagement', 'Conversion', 'Education'],
-                'outputFormats' => ['Paragraph', 'Bullet Points', 'Headline + Body', 'AIDA', 'PAS'],
+                'durationPresets' => [15, 30, 45, 60, 90],
+                'videoGoals' => ['Awareness', 'Engagement', 'Conversion', 'Education'],
+                'videoFormats' => ['Talking Head', 'Storyboard', 'Slideshow', 'UGC Style', 'Voiceover Ad'],
                 'ctaStyles' => ['Soft', 'Direct', 'Urgent', 'Consultative'],
                 'templates' => array_values($templates),
                 'providers' => $this->availableProviders(),
@@ -144,7 +143,7 @@ class ContentGenerationController extends Controller
 
         return redirect()
             ->route('dashboard', ['generation' => $generation->id])
-            ->with('flash.success', "Content generated for \"{$generation->topic}\".");
+            ->with('flash.success', "Video plan generated for \"{$generation->topic}\".");
     }
 
     public function destroy(Request $request, ContentGeneration $contentGeneration): RedirectResponse
@@ -153,7 +152,7 @@ class ContentGenerationController extends Controller
 
         $contentGeneration->delete();
 
-        return back()->with('flash.success', 'Generation deleted.');
+        return back()->with('flash.success', 'Video plan deleted.');
     }
 
     public function favorite(Request $request, ContentGeneration $contentGeneration): RedirectResponse
@@ -169,10 +168,12 @@ class ContentGenerationController extends Controller
 
         $contentGeneration->update([
             'best_variation_index' => $index,
-            'generated_content' => $variations->get($index)['content'] ?? $contentGeneration->generated_content,
+            'generated_content' => $variations->get($index)['script']
+                ?? $variations->get($index)['content']
+                ?? $contentGeneration->generated_content,
         ]);
 
-        return back()->with('flash.success', 'Favorite variation updated.');
+        return back()->with('flash.success', 'Best variation updated.');
     }
 
     public function regenerate(Request $request, ContentGeneration $contentGeneration): RedirectResponse
@@ -181,20 +182,19 @@ class ContentGenerationController extends Controller
 
         try {
             $generation = $this->persistGeneration($request->user(), [
-                'content_type' => $contentGeneration->content_type,
+                'video_type' => $contentGeneration->content_type,
                 'topic' => $contentGeneration->topic,
                 'keywords' => collect($contentGeneration->keywords ?? [])->implode(', '),
                 'target_audience' => $contentGeneration->target_audience,
                 'tone' => $contentGeneration->tone,
                 'template_key' => $contentGeneration->template_key,
                 'ui_language' => $contentGeneration->ui_language ?? $request->user()->preferred_output_language ?? 'en',
-                'content_goal' => $contentGeneration->content_goal,
-                'output_format' => $contentGeneration->output_format,
+                'video_goal' => $contentGeneration->content_goal,
+                'video_format' => $contentGeneration->output_format,
                 'cta_style' => $contentGeneration->cta_style,
                 'custom_instruction' => $contentGeneration->custom_instruction,
                 'variation_count' => $contentGeneration->variation_count,
-                'length_control_type' => $contentGeneration->length_control_type,
-                'length_control_value' => $contentGeneration->length_control_value,
+                'duration_seconds' => $contentGeneration->duration_seconds ?? $contentGeneration->length_control_value ?? 30,
             ]);
         } catch (RuntimeException $exception) {
             return back()->with('flash.error', $exception->getMessage());
@@ -202,7 +202,7 @@ class ContentGenerationController extends Controller
 
         return redirect()
             ->route('dashboard', ['generation' => $generation->id])
-            ->with('flash.success', "Content regenerated for \"{$generation->topic}\".");
+            ->with('flash.success', "Video plan regenerated for \"{$generation->topic}\".");
     }
 
     public function export(Request $request, ContentGeneration $contentGeneration)
@@ -211,25 +211,46 @@ class ContentGenerationController extends Controller
 
         $variationIndex = max(0, (int) $request->integer('variation', 0));
         $variation = collect($contentGeneration->variations ?? [])->get($variationIndex);
-        $exportedContent = $variation['content'] ?? $contentGeneration->generated_content;
+        $exportedContent = $variation['script'] ?? $variation['content'] ?? $contentGeneration->generated_content;
         $variationTitle = $variation['title'] ?? 'Primary Variation';
+        $sceneLines = collect($variation['scenes'] ?? [])
+            ->map(function (array $scene, int $index) {
+                $sceneNumber = $scene['scene_number'] ?? $index + 1;
+                $sceneDuration = $scene['duration_seconds'] ?? null;
 
-        $filename = Str::slug($contentGeneration->topic).'-content.txt';
+                return collect([
+                    "Scene {$sceneNumber}".($sceneDuration ? " ({$sceneDuration}s)" : ''),
+                    'Visual: '.($scene['visual'] ?? '-'),
+                    'Voiceover: '.($scene['voiceover'] ?? '-'),
+                    'On-screen text: '.($scene['onscreen_text'] ?? '-'),
+                    'Transition: '.($scene['transition'] ?? '-'),
+                ])->implode(PHP_EOL);
+            })
+            ->implode(PHP_EOL.PHP_EOL);
+
+        $filename = Str::slug($contentGeneration->topic).'-video-plan.txt';
         $body = collect([
-            "Content Type: {$contentGeneration->content_type}",
+            "Video Type: {$contentGeneration->content_type}",
             "Topic: {$contentGeneration->topic}",
             "Audience: {$contentGeneration->target_audience}",
             "Tone: {$contentGeneration->tone}",
             "Template: ".($contentGeneration->template_key ?: self::DEFAULT_TEMPLATE_KEY),
             "Language: ".($contentGeneration->ui_language ?? 'en'),
             "Goal: ".($contentGeneration->content_goal ?? '-'),
-            "Output Format: ".($contentGeneration->output_format ?? '-'),
+            "Video Format: ".($contentGeneration->output_format ?? '-'),
             "CTA Style: ".($contentGeneration->cta_style ?? '-'),
-            "Length Target: {$contentGeneration->length_control_value} {$contentGeneration->length_control_type}",
+            'Duration: '.(($variation['estimated_duration_seconds'] ?? $contentGeneration->duration_seconds ?? null) ? (($variation['estimated_duration_seconds'] ?? $contentGeneration->duration_seconds).' seconds') : '-'),
             'Keywords: '.collect($contentGeneration->keywords ?? [])->implode(', '),
             "Variation: {$variationTitle}",
+            'Summary: '.($variation['summary'] ?? '-'),
+            'Hook: '.($variation['hook'] ?? '-'),
+            'CTA: '.($variation['cta'] ?? '-'),
             '',
+            'Script:',
             $exportedContent,
+            '',
+            'Scene Breakdown:',
+            $sceneLines !== '' ? $sceneLines : '-',
         ])->implode(PHP_EOL);
 
         return response()->streamDownload(
@@ -252,7 +273,7 @@ class ContentGenerationController extends Controller
                 'name_id' => 'Brief Kosong',
                 'description' => 'Start from scratch with your own topic and audience.',
                 'description_id' => 'Mulai dari nol dengan topik dan audiensmu sendiri.',
-                'content_type' => 'Blog Post',
+                'video_type' => 'Marketing Video',
                 'topic' => '',
                 'topic_id' => '',
                 'keywords' => '',
@@ -260,67 +281,71 @@ class ContentGenerationController extends Controller
                 'target_audience' => '',
                 'target_audience_id' => '',
                 'tone' => 'Professional',
+                'duration_seconds' => 30,
                 'instruction' => '',
                 'instruction_id' => '',
             ],
-            'product-launch-email' => [
-                'key' => 'product-launch-email',
-                'name' => 'Product Launch Email',
-                'name_id' => 'Email Peluncuran Produk',
-                'description' => 'Announce a new product or feature with a clear CTA.',
-                'description_id' => 'Umumkan produk atau fitur baru dengan CTA yang jelas.',
-                'content_type' => 'Email',
-                'topic' => 'Launch announcement for a new product feature',
-                'topic_id' => 'Pengumuman peluncuran untuk fitur produk baru',
-                'keywords' => 'launch, new feature, early access',
-                'keywords_id' => 'peluncuran, fitur baru, akses awal',
-                'target_audience' => 'Existing users and trial users',
-                'target_audience_id' => 'Pengguna lama dan pengguna trial',
+            'product-launch-video' => [
+                'key' => 'product-launch-video',
+                'name' => 'Product Launch Video',
+                'name_id' => 'Video Peluncuran Produk',
+                'description' => 'Pitch a new product or feature with a clear visual flow and CTA.',
+                'description_id' => 'Promosikan produk atau fitur baru dengan alur visual dan CTA yang jelas.',
+                'video_type' => 'Marketing Video',
+                'topic' => 'Launch video for a new productivity app feature',
+                'topic_id' => 'Video peluncuran untuk fitur baru aplikasi produktivitas',
+                'keywords' => 'launch, productivity, app, new feature',
+                'keywords_id' => 'peluncuran, produktivitas, aplikasi, fitur baru',
+                'target_audience' => 'Busy professionals and startup teams',
+                'target_audience_id' => 'Profesional sibuk dan tim startup',
                 'tone' => 'Persuasive',
-                'instruction' => 'Structure the content like a launch email with a strong opening hook, benefit-focused body, and a clear call to action.',
-                'instruction_id' => 'Susun konten seperti email peluncuran dengan hook pembuka yang kuat, isi yang menonjolkan manfaat, dan call to action yang jelas.',
+                'duration_seconds' => 30,
+                'instruction' => 'Create a short launch video script with a strong hook, scene-by-scene benefits, clear visuals, and a direct CTA.',
+                'instruction_id' => 'Buat skrip video peluncuran singkat dengan hook kuat, manfaat per adegan, visual yang jelas, dan CTA langsung.',
             ],
-            'instagram-promo' => [
-                'key' => 'instagram-promo',
-                'name' => 'Instagram Promo Caption',
-                'name_id' => 'Caption Promo Instagram',
-                'description' => 'Create short social captions for promotions or campaigns.',
-                'description_id' => 'Buat caption sosial singkat untuk promosi atau campaign.',
-                'content_type' => 'Social Media Post',
-                'topic' => 'Weekend promo campaign for an online store',
-                'topic_id' => 'Kampanye promo akhir pekan untuk toko online',
-                'keywords' => 'promo, limited time, weekend sale',
-                'keywords_id' => 'promo, waktu terbatas, diskon akhir pekan',
+            'social-media-reel' => [
+                'key' => 'social-media-reel',
+                'name' => 'Social Media Reel',
+                'name_id' => 'Reel Media Sosial',
+                'description' => 'Build a short, hook-driven social reel with fast scenes.',
+                'description_id' => 'Buat reel sosial singkat dengan hook kuat dan adegan cepat.',
+                'video_type' => 'Social Media Reel',
+                'topic' => 'Weekend sale promotion for an online store',
+                'topic_id' => 'Promosi diskon akhir pekan untuk toko online',
+                'keywords' => 'weekend sale, promo, limited time',
+                'keywords_id' => 'diskon akhir pekan, promo, waktu terbatas',
                 'target_audience' => 'Online shoppers aged 18-30',
                 'target_audience_id' => 'Pembeli online usia 18-30 tahun',
                 'tone' => 'Friendly',
-                'instruction' => 'Write like a high-performing social caption with an attention-grabbing first line, concise benefit, and a direct promotional CTA.',
-                'instruction_id' => 'Tulis seperti caption sosial yang efektif dengan baris pembuka yang menarik perhatian, manfaat yang ringkas, dan CTA promosi yang langsung.',
+                'duration_seconds' => 15,
+                'instruction' => 'Create a fast-paced reel concept with quick visual cuts, punchy on-screen text, and a strong promotional CTA.',
+                'instruction_id' => 'Buat konsep reel yang cepat dengan potongan visual singkat, teks layar yang punchy, dan CTA promosi yang kuat.',
             ],
-            'seo-blog-outline' => [
-                'key' => 'seo-blog-outline',
-                'name' => 'SEO Blog Draft',
-                'name_id' => 'Draft Blog SEO',
-                'description' => 'Generate a readable blog-style draft around search keywords.',
-                'description_id' => 'Hasilkan draft bergaya blog yang mudah dibaca berdasarkan keyword pencarian.',
-                'content_type' => 'Blog Post',
-                'topic' => 'How to improve team productivity with AI tools',
-                'topic_id' => 'Cara meningkatkan produktivitas tim dengan alat AI',
-                'keywords' => 'AI productivity, team workflow, automation',
-                'keywords_id' => 'produktivitas AI, alur kerja tim, otomatisasi',
+            'educational-clip' => [
+                'key' => 'educational-clip',
+                'name' => 'Educational Clip',
+                'name_id' => 'Klip Edukasi',
+                'description' => 'Explain a topic clearly with structured learning scenes.',
+                'description_id' => 'Jelaskan topik dengan jelas melalui adegan pembelajaran yang terstruktur.',
+                'video_type' => 'Educational Clip',
+                'topic' => 'How AI tools improve team productivity',
+                'topic_id' => 'Cara alat AI meningkatkan produktivitas tim',
+                'keywords' => 'AI productivity, workflow, automation',
+                'keywords_id' => 'produktivitas AI, alur kerja, otomatisasi',
                 'target_audience' => 'Startup teams and business owners',
                 'target_audience_id' => 'Tim startup dan pemilik bisnis',
                 'tone' => 'Educational',
-                'instruction' => 'Use a blog-friendly structure with a compelling introduction, informative sub-sections, and a concise closing takeaway.',
-                'instruction_id' => 'Gunakan struktur blog yang ramah dibaca dengan pembuka yang menarik, subbagian informatif, dan penutup yang singkat namun kuat.',
+                'duration_seconds' => 60,
+                'instruction' => 'Create an educational clip with a clear intro, structured teaching scenes, and a concise takeaway at the end.',
+                'instruction_id' => 'Buat klip edukasi dengan pembuka yang jelas, adegan pembelajaran terstruktur, dan penutup ringkas di akhir.',
             ],
-            'product-description' => [
-                'key' => 'product-description',
-                'name' => 'Product Description',
-                'name_id' => 'Deskripsi Produk',
-                'description' => 'Write benefit-led ecommerce copy for a product page.',
-                'description_id' => 'Tulis copy ecommerce berbasis manfaat untuk halaman produk.',
-                'content_type' => 'Product Description',
+            'product-explainer' => [
+                'key' => 'product-explainer',
+                'name' => 'Product Explainer',
+                'name_id' => 'Video Penjelasan Produk',
+                'description' => 'Show product benefits scene by scene in a short explainer format.',
+                'description_id' => 'Tampilkan manfaat produk per adegan dalam format explainer singkat.',
+                'video_type' => 'Product Explainer',
                 'topic' => 'Wireless noise-cancelling headphones',
                 'topic_id' => 'Headphone nirkabel dengan peredam bising',
                 'keywords' => 'wireless, battery life, immersive sound',
@@ -328,8 +353,9 @@ class ContentGenerationController extends Controller
                 'target_audience' => 'Busy professionals and music lovers',
                 'target_audience_id' => 'Profesional sibuk dan pecinta musik',
                 'tone' => 'Confident',
-                'instruction' => 'Emphasize benefits first, keep the copy easy to scan, and highlight the strongest selling points naturally.',
-                'instruction_id' => 'Utamakan manfaat, buat copy mudah dipindai, dan tonjolkan nilai jual terkuat secara natural.',
+                'duration_seconds' => 45,
+                'instruction' => 'Create a product explainer with strong benefit-led scenes, clear visuals, a persuasive script, and a clean CTA.',
+                'instruction_id' => 'Buat video penjelasan produk dengan adegan berbasis manfaat, visual yang jelas, skrip persuasif, dan CTA yang rapi.',
             ],
         ];
     }
@@ -363,19 +389,18 @@ class ContentGenerationController extends Controller
     {
         return [
             'id' => $generation->id,
-            'content_type' => $generation->content_type,
+            'video_type' => $generation->content_type,
             'topic' => $generation->topic,
             'keywords' => $generation->keywords ?? [],
             'target_audience' => $generation->target_audience,
             'tone' => $generation->tone,
             'template_key' => $generation->template_key ?? self::DEFAULT_TEMPLATE_KEY,
             'ui_language' => $generation->ui_language ?? 'en',
-            'content_goal' => $generation->content_goal,
-            'output_format' => $generation->output_format,
+            'video_goal' => $generation->content_goal,
+            'video_format' => $generation->output_format,
             'cta_style' => $generation->cta_style,
             'custom_instruction' => $generation->custom_instruction,
-            'length_control_type' => $generation->length_control_type ?? 'words',
-            'length_control_value' => $generation->length_control_value ?? 250,
+            'duration_seconds' => $generation->duration_seconds ?? 30,
             'variation_count' => $generation->variation_count,
             'best_variation_index' => $generation->best_variation_index,
             'variations' => $generation->variations ?? [],
@@ -407,19 +432,24 @@ class ContentGenerationController extends Controller
             'template_name' => $this->localizedTemplateValue($template, 'name', $uiLanguage),
             'template_instruction' => $this->localizedTemplateValue($template, 'instruction', $uiLanguage),
             'ui_language' => $uiLanguage,
+            'duration_seconds' => (int) ($validated['duration_seconds'] ?? $template['duration_seconds'] ?? 30),
         ]);
 
         return $user->contentGenerations()->create([
-            ...$validated,
             'keywords' => $keywordArray,
+            'content_type' => $validated['video_type'],
+            'topic' => $validated['topic'],
+            'target_audience' => $validated['target_audience'],
+            'tone' => $validated['tone'],
             'template_key' => $template['key'],
             'ui_language' => $uiLanguage,
-            'content_goal' => $validated['content_goal'] ?? null,
-            'output_format' => $validated['output_format'] ?? null,
+            'content_goal' => $validated['video_goal'] ?? null,
+            'output_format' => $validated['video_format'] ?? null,
             'cta_style' => $validated['cta_style'] ?? null,
             'custom_instruction' => $validated['custom_instruction'] ?? null,
-            'length_control_type' => $validated['length_control_type'],
-            'length_control_value' => $validated['length_control_value'],
+            'duration_seconds' => (int) ($validated['duration_seconds'] ?? $template['duration_seconds'] ?? 30),
+            'length_control_type' => 'seconds',
+            'length_control_value' => (int) ($validated['duration_seconds'] ?? $template['duration_seconds'] ?? 30),
             'prompt' => $result['prompt'],
             'generated_content' => $result['generated_content'],
             'variation_count' => $validated['variation_count'],

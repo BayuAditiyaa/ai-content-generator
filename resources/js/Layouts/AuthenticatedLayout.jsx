@@ -34,7 +34,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                             ProseAI
                                         </div>
                                         <div className="display-title text-xl text-slate-900">
-                                            AI Content Generator
+                                            AI Video Planner
                                         </div>
                                     </div>
                                 </Link>

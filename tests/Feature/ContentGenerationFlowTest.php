@@ -6,7 +6,6 @@ use App\Models\ContentGeneration;
 use App\Models\User;
 use App\Services\AiContentGeneratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -23,10 +22,10 @@ class ContentGenerationFlowTest extends TestCase
                 ->once()
                 ->andReturn([
                     'prompt' => 'Prompt body',
-                    'generated_content' => 'Primary generated content',
+                    'generated_content' => 'Primary generated video script',
                     'variations' => [
-                        ['title' => 'Variation 1', 'content' => 'Primary generated content'],
-                        ['title' => 'Variation 2', 'content' => 'Alternative generated content'],
+                        ['title' => 'Variation 1', 'script' => 'Primary generated video script', 'content' => 'Primary generated video script', 'scenes' => []],
+                        ['title' => 'Variation 2', 'script' => 'Alternative generated video script', 'content' => 'Alternative generated video script', 'scenes' => []],
                     ],
                     'provider' => 'gemini',
                     'model' => 'gemini-3-flash-preview',
@@ -37,29 +36,30 @@ class ContentGenerationFlowTest extends TestCase
         $response = $this->actingAs($user)->post(route('generations.store'), [
             'template_key' => 'blank',
             'ui_language' => 'en',
-            'content_type' => 'Blog Post',
-            'topic' => 'How to save time with AI',
-            'keywords' => 'ai, productivity',
+            'video_type' => 'Marketing Video',
+            'topic' => 'Launch video for a productivity app',
+            'keywords' => 'ai, productivity, launch',
             'target_audience' => 'Busy professionals',
             'tone' => 'Professional',
-            'content_goal' => 'Awareness',
-            'output_format' => 'Paragraph',
+            'video_goal' => 'Awareness',
+            'video_format' => 'Storyboard',
             'cta_style' => 'Soft',
             'custom_instruction' => 'Keep it concise.',
             'variation_count' => 2,
-            'length_control_type' => 'words',
-            'length_control_value' => 250,
+            'duration_seconds' => 30,
         ]);
 
         $generation = ContentGeneration::query()->latest()->first();
 
         $this->assertNotNull($generation);
         $response->assertRedirect(route('dashboard', ['generation' => $generation->id]));
-        $this->assertSame('How to save time with AI', $generation->topic);
+        $this->assertSame('Launch video for a productivity app', $generation->topic);
+        $this->assertSame('Marketing Video', $generation->content_type);
         $this->assertSame('gemini', $generation->provider);
+        $this->assertSame(30, $generation->duration_seconds);
         $this->assertSame(842, $generation->generation_duration_ms);
         $this->assertNull($generation->best_variation_index);
-        $this->assertSame(['ai', 'productivity'], $generation->keywords);
+        $this->assertSame(['ai', 'productivity', 'launch'], $generation->keywords);
     }
 
     public function test_user_can_mark_a_variation_as_favorite(): void
@@ -67,27 +67,28 @@ class ContentGenerationFlowTest extends TestCase
         $user = User::factory()->create();
         $generation = ContentGeneration::query()->create([
             'user_id' => $user->id,
-            'content_type' => 'Email',
-            'topic' => 'Launch update',
+            'content_type' => 'Marketing Video',
+            'topic' => 'Launch video',
             'keywords' => ['launch', 'product'],
             'target_audience' => 'Existing users',
             'tone' => 'Persuasive',
-            'template_key' => 'product-launch-email',
+            'template_key' => 'product-launch-video',
             'ui_language' => 'en',
             'content_goal' => 'Conversion',
-            'output_format' => 'Headline + Body',
+            'output_format' => 'Storyboard',
             'cta_style' => 'Direct',
             'custom_instruction' => null,
+            'duration_seconds' => 30,
             'length_control_type' => 'words',
             'length_control_value' => 150,
             'variation_count' => 2,
             'best_variation_index' => null,
             'variations' => [
-                ['title' => 'Variation 1', 'content' => 'First content'],
-                ['title' => 'Variation 2', 'content' => 'Favorite content'],
+                ['title' => 'Variation 1', 'script' => 'First script', 'content' => 'First script', 'scenes' => []],
+                ['title' => 'Variation 2', 'script' => 'Favorite script', 'content' => 'Favorite script', 'scenes' => []],
             ],
             'prompt' => 'Prompt body',
-            'generated_content' => 'First content',
+            'generated_content' => 'First script',
             'provider' => 'gemini',
             'model' => 'gemini-3-flash-preview',
             'generation_duration_ms' => 650,
@@ -102,7 +103,7 @@ class ContentGenerationFlowTest extends TestCase
         $generation->refresh();
 
         $this->assertSame(1, $generation->best_variation_index);
-        $this->assertSame('Favorite content', $generation->generated_content);
+        $this->assertSame('Favorite script', $generation->generated_content);
     }
 
     public function test_user_can_regenerate_an_existing_brief(): void
@@ -114,26 +115,27 @@ class ContentGenerationFlowTest extends TestCase
 
         $existingGeneration = ContentGeneration::query()->create([
             'user_id' => $user->id,
-            'content_type' => 'Email',
-            'topic' => 'Monthly update',
+            'content_type' => 'Educational Clip',
+            'topic' => 'Monthly product education clip',
             'keywords' => ['update', 'office'],
             'target_audience' => 'Internal team',
             'tone' => 'Professional',
             'template_key' => 'blank',
             'ui_language' => 'id',
             'content_goal' => 'Engagement',
-            'output_format' => 'Paragraph',
+            'output_format' => 'Storyboard',
             'cta_style' => 'Consultative',
             'custom_instruction' => 'Use a warm tone.',
+            'duration_seconds' => 60,
             'length_control_type' => 'words',
             'length_control_value' => 180,
             'variation_count' => 2,
             'best_variation_index' => 0,
             'variations' => [
-                ['title' => 'Variation 1', 'content' => 'Existing content'],
+                ['title' => 'Variation 1', 'script' => 'Existing script', 'content' => 'Existing script', 'scenes' => []],
             ],
             'prompt' => 'Old prompt',
-            'generated_content' => 'Existing content',
+            'generated_content' => 'Existing script',
             'provider' => 'gemini',
             'model' => 'gemini-3-flash-preview',
             'generation_duration_ms' => 500,
@@ -144,9 +146,9 @@ class ContentGenerationFlowTest extends TestCase
                 ->once()
                 ->andReturn([
                     'prompt' => 'New prompt',
-                    'generated_content' => 'Fresh regenerated content',
+                    'generated_content' => 'Fresh regenerated script',
                     'variations' => [
-                        ['title' => 'Variation 1', 'content' => 'Fresh regenerated content'],
+                        ['title' => 'Variation 1', 'script' => 'Fresh regenerated script', 'content' => 'Fresh regenerated script', 'scenes' => []],
                     ],
                     'provider' => 'groq',
                     'model' => 'llama-3.1-8b-instant',
@@ -164,9 +166,9 @@ class ContentGenerationFlowTest extends TestCase
             ->first();
 
         $response->assertRedirect(route('dashboard', ['generation' => $newGeneration->id]));
-        $this->assertSame('Monthly update', $newGeneration->topic);
+        $this->assertSame('Monthly product education clip', $newGeneration->topic);
         $this->assertSame('groq', $newGeneration->provider);
-        $this->assertSame('Fresh regenerated content', $newGeneration->generated_content);
+        $this->assertSame('Fresh regenerated script', $newGeneration->generated_content);
         $this->assertNull($newGeneration->best_variation_index);
     }
 
@@ -193,26 +195,27 @@ class ContentGenerationFlowTest extends TestCase
 
         ContentGeneration::query()->create([
             'user_id' => $user->id,
-            'content_type' => 'Blog Post',
-            'topic' => 'Gemini draft',
+            'content_type' => 'Marketing Video',
+            'topic' => 'Gemini video draft',
             'keywords' => ['gemini'],
             'target_audience' => 'Marketers',
             'tone' => 'Professional',
             'template_key' => 'blank',
             'ui_language' => 'en',
             'content_goal' => 'Awareness',
-            'output_format' => 'Paragraph',
+            'output_format' => 'Storyboard',
             'cta_style' => 'Soft',
             'custom_instruction' => null,
+            'duration_seconds' => 30,
             'length_control_type' => 'words',
             'length_control_value' => 250,
             'variation_count' => 1,
             'best_variation_index' => null,
             'variations' => [
-                ['title' => 'Variation 1', 'content' => 'Gemini content'],
+                ['title' => 'Variation 1', 'script' => 'Gemini script', 'content' => 'Gemini script', 'summary' => 'Gemini summary', 'scenes' => []],
             ],
             'prompt' => 'Prompt',
-            'generated_content' => 'Gemini content',
+            'generated_content' => 'Gemini script',
             'provider' => 'gemini',
             'model' => 'gemini-3-flash-preview',
             'generation_duration_ms' => 700,
@@ -220,26 +223,27 @@ class ContentGenerationFlowTest extends TestCase
 
         ContentGeneration::query()->create([
             'user_id' => $user->id,
-            'content_type' => 'Email',
-            'topic' => 'Groq favorite',
+            'content_type' => 'Social Media Reel',
+            'topic' => 'Groq favorite reel',
             'keywords' => ['groq'],
             'target_audience' => 'Teams',
             'tone' => 'Friendly',
             'template_key' => 'blank',
             'ui_language' => 'en',
             'content_goal' => 'Engagement',
-            'output_format' => 'Bullet Points',
+            'output_format' => 'UGC Style',
             'cta_style' => 'Direct',
             'custom_instruction' => null,
+            'duration_seconds' => 15,
             'length_control_type' => 'words',
             'length_control_value' => 150,
             'variation_count' => 1,
             'best_variation_index' => 0,
             'variations' => [
-                ['title' => 'Variation 1', 'content' => 'Groq favorite content'],
+                ['title' => 'Variation 1', 'script' => 'Groq favorite script', 'content' => 'Groq favorite script', 'summary' => 'Groq favorite summary', 'scenes' => []],
             ],
             'prompt' => 'Prompt',
-            'generated_content' => 'Groq favorite content',
+            'generated_content' => 'Groq favorite script',
             'provider' => 'groq',
             'model' => 'llama-3.1-8b-instant',
             'generation_duration_ms' => 620,
@@ -251,12 +255,11 @@ class ContentGenerationFlowTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertInertia(fn (Assert $page) => $page
-            ->component('ContentGenerator/History')
-            ->where('filters.provider', 'groq')
-            ->where('filters.favorites', true)
-            ->has('generations.data', 1)
-            ->where('generations.data.0.topic', 'Groq favorite'));
+        $response->assertJsonPath('component', 'ContentGenerator/History');
+        $response->assertJsonPath('props.filters.provider', 'groq');
+        $response->assertJsonPath('props.filters.favorites', true);
+        $response->assertJsonCount(1, 'props.generations.data');
+        $response->assertJsonPath('props.generations.data.0.topic', 'Groq favorite reel');
     }
 
     public function test_dashboard_can_select_a_generation_outside_the_current_page(): void
@@ -266,26 +269,27 @@ class ContentGenerationFlowTest extends TestCase
         foreach (range(1, 8) as $index) {
             ContentGeneration::query()->create([
                 'user_id' => $user->id,
-                'content_type' => 'Blog Post',
-                'topic' => "Recent result {$index}",
+                'content_type' => 'Marketing Video',
+                'topic' => "Recent video result {$index}",
                 'keywords' => ["recent-{$index}"],
                 'target_audience' => 'Marketers',
                 'tone' => 'Professional',
                 'template_key' => 'blank',
                 'ui_language' => 'en',
                 'content_goal' => 'Awareness',
-                'output_format' => 'Paragraph',
+                'output_format' => 'Storyboard',
                 'cta_style' => 'Soft',
                 'custom_instruction' => null,
+                'duration_seconds' => 30,
                 'length_control_type' => 'words',
                 'length_control_value' => 250,
                 'variation_count' => 1,
                 'best_variation_index' => null,
                 'variations' => [
-                    ['title' => 'Variation 1', 'content' => "Recent content {$index}"],
+                    ['title' => 'Variation 1', 'script' => "Recent script {$index}", 'content' => "Recent script {$index}", 'scenes' => []],
                 ],
                 'prompt' => 'Prompt',
-                'generated_content' => "Recent content {$index}",
+                'generated_content' => "Recent script {$index}",
                 'provider' => 'gemini',
                 'model' => 'gemini-3-flash-preview',
                 'generation_duration_ms' => 300 + $index,
@@ -296,26 +300,27 @@ class ContentGenerationFlowTest extends TestCase
 
         $olderGeneration = ContentGeneration::query()->create([
             'user_id' => $user->id,
-            'content_type' => 'Email',
-            'topic' => 'Older saved result',
+            'content_type' => 'Marketing Video',
+            'topic' => 'Older saved video result',
             'keywords' => ['older'],
             'target_audience' => 'Subscribers',
             'tone' => 'Friendly',
             'template_key' => 'blank',
             'ui_language' => 'en',
             'content_goal' => 'Engagement',
-            'output_format' => 'Paragraph',
+            'output_format' => 'Storyboard',
             'cta_style' => 'Soft',
             'custom_instruction' => null,
+            'duration_seconds' => 45,
             'length_control_type' => 'words',
             'length_control_value' => 150,
             'variation_count' => 1,
             'best_variation_index' => null,
             'variations' => [
-                ['title' => 'Variation 1', 'content' => 'Older content'],
+                ['title' => 'Variation 1', 'script' => 'Older script', 'content' => 'Older script', 'scenes' => []],
             ],
             'prompt' => 'Prompt',
-            'generated_content' => 'Older content',
+            'generated_content' => 'Older script',
             'provider' => 'gemini',
             'model' => 'gemini-3-flash-preview',
             'generation_duration_ms' => 300,
@@ -328,10 +333,9 @@ class ContentGenerationFlowTest extends TestCase
         ]));
 
         $response->assertOk();
-        $response->assertInertia(fn (Assert $page) => $page
-            ->component('ContentGenerator/Index')
-            ->where('selectedGenerationId', $olderGeneration->id)
-            ->where('selectedGeneration.id', $olderGeneration->id)
-            ->where('selectedGeneration.topic', 'Older saved result'));
+        $response->assertJsonPath('component', 'ContentGenerator/Index');
+        $response->assertJsonPath('props.selectedGenerationId', $olderGeneration->id);
+        $response->assertJsonPath('props.selectedGeneration.id', $olderGeneration->id);
+        $response->assertJsonPath('props.selectedGeneration.topic', 'Older saved video result');
     }
 }

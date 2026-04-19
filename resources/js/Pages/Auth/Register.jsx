@@ -36,8 +36,8 @@ export default function Register() {
                     <p className="mt-3 text-sm leading-7 text-slate-600">
                         {pickLanguage(
                             locale,
-                            'Create your workspace and move straight into building the AI content generator.',
-                            'Buat workspace-mu lalu langsung lanjut membangun AI content generator.',
+                            'Create your workspace and move straight into building the AI video generator.',
+                            'Buat workspace-mu lalu langsung lanjut membangun AI video generator.',
                         )}
                     </p>
                 </div>
