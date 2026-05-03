@@ -41,6 +41,7 @@ return [
         'api_key' => env('AI_CONTENT_API_KEY'),
         'model' => env('AI_CONTENT_MODEL', 'gpt-4.1-mini'),
         'api_style' => env('AI_CONTENT_API_STYLE', 'chat_completions'),
+        'daily_generation_limit' => env('AI_DAILY_GENERATION_LIMIT', 10),
     ],
 
     'ai_content_fallback' => [
@@ -50,6 +51,12 @@ return [
         'api_key' => env('AI_CONTENT_FALLBACK_API_KEY'),
         'model' => env('AI_CONTENT_FALLBACK_MODEL', 'llama-3.1-8b-instant'),
         'api_style' => env('AI_CONTENT_FALLBACK_API_STYLE', 'chat_completions'),
+    ],
+
+    'turnstile' => [
+        'enabled' => env('TURNSTILE_ENABLED', false),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
     ],
 
 ];

@@ -2,24 +2,33 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import TurnstileWidget from '@/Components/TurnstileWidget';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { pickLanguage, useUiLanguage } from '@/lib/ui-language';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function Register() {
     const { locale } = useUiLanguage();
+    const { security } = usePage().props;
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+    const turnstile = security?.turnstile ?? { enabled: false, site_key: '' };
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        turnstile_token: '',
     });
 
     const submit = (e) => {
         e.preventDefault();
 
         post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+            onFinish: () => {
+                reset('password', 'password_confirmation', 'turnstile_token');
+                setTurnstileResetKey((current) => current + 1);
+            },
         });
     };
 
@@ -139,6 +148,18 @@ export default function Register() {
                         className="mt-2"
                     />
                 </div>
+
+                {turnstile.enabled && turnstile.site_key && (
+                    <div className="mt-5 rounded-2xl border border-stone-200/80 bg-white/70 p-4">
+                        <TurnstileWidget
+                            key={turnstileResetKey}
+                            siteKey={turnstile.site_key}
+                            resetKey={turnstileResetKey}
+                            onVerify={(token) => setData('turnstile_token', token)}
+                        />
+                        <InputError message={errors.turnstile_token} className="mt-2" />
+                    </div>
+                )}
 
                 <div className="mt-6 flex items-center justify-end">
                     <Link

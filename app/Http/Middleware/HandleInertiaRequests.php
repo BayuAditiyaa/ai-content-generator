@@ -42,6 +42,12 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('flash.success'),
                 'error' => $request->session()->get('flash.error'),
             ],
+            'security' => [
+                'turnstile' => [
+                    'enabled' => (bool) config('services.turnstile.enabled'),
+                    'site_key' => config('services.turnstile.site_key'),
+                ],
+            ],
             'ai' => [
                 'provider' => config('services.ai_content.provider'),
                 'model' => config('services.ai_content.model'),

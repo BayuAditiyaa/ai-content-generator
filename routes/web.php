@@ -19,9 +19,9 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [ContentGenerationController::class, 'index'])->name('dashboard');
     Route::get('/history', [ContentGenerationController::class, 'history'])->name('history.index');
-    Route::post('/generations', [ContentGenerationController::class, 'store'])->middleware('throttle:8,1')->name('generations.store');
+    Route::post('/generations', [ContentGenerationController::class, 'store'])->middleware('throttle:4,1')->name('generations.store');
     Route::post('/generations/{contentGeneration}/favorite', [ContentGenerationController::class, 'favorite'])->name('generations.favorite');
-    Route::post('/generations/{contentGeneration}/regenerate', [ContentGenerationController::class, 'regenerate'])->middleware('throttle:8,1')->name('generations.regenerate');
+    Route::post('/generations/{contentGeneration}/regenerate', [ContentGenerationController::class, 'regenerate'])->middleware('throttle:4,1')->name('generations.regenerate');
     Route::delete('/generations/{contentGeneration}', [ContentGenerationController::class, 'destroy'])->name('generations.destroy');
     Route::get('/generations/{contentGeneration}/export', [ContentGenerationController::class, 'export'])->name('generations.export');
     Route::get('/settings/ai', [AiPreferencesController::class, 'edit'])->name('settings.ai.edit');

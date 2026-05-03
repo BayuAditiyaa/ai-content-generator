@@ -131,6 +131,10 @@ class ContentGenerationController extends Controller
 
     public function store(StoreContentGenerationRequest $request): RedirectResponse
     {
+        if ($quotaResponse = $this->rejectWhenDailyQuotaExceeded($request)) {
+            return $quotaResponse->withInput();
+        }
+
         try {
             $generation = $this->persistGeneration($request->user(), $request->validated());
         } catch (RuntimeException $exception) {
@@ -179,6 +183,10 @@ class ContentGenerationController extends Controller
     public function regenerate(Request $request, ContentGeneration $contentGeneration): RedirectResponse
     {
         abort_unless($contentGeneration->user_id === $request->user()->id, 403);
+
+        if ($quotaResponse = $this->rejectWhenDailyQuotaExceeded($request)) {
+            return $quotaResponse;
+        }
 
         try {
             $generation = $this->persistGeneration($request->user(), [
@@ -412,6 +420,35 @@ class ContentGenerationController extends Controller
             'created_at' => $generation->created_at?->toIso8601String(),
             'created_at_human' => $generation->created_at?->diffForHumans(),
         ];
+    }
+
+    protected function rejectWhenDailyQuotaExceeded(Request $request): ?RedirectResponse
+    {
+        $limit = max(0, (int) config('services.ai_content.daily_generation_limit', 10));
+
+        if ($limit === 0) {
+            return null;
+        }
+
+        $usedToday = $request->user()
+            ->contentGenerations()
+            ->whereBetween('created_at', [
+                now()->startOfDay(),
+                now()->endOfDay(),
+            ])
+            ->count();
+
+        if ($usedToday < $limit) {
+            return null;
+        }
+
+        $message = "Daily generation limit reached. You can generate up to {$limit} video plans per day.";
+
+        return back()
+            ->with('flash.error', $message)
+            ->withErrors([
+                'generation' => $message,
+            ]);
     }
 
     protected function persistGeneration($user, array $validated): ContentGeneration

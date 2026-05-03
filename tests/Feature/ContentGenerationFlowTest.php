@@ -106,6 +106,68 @@ class ContentGenerationFlowTest extends TestCase
         $this->assertSame('Favorite script', $generation->generated_content);
     }
 
+    public function test_user_cannot_generate_after_reaching_daily_limit(): void
+    {
+        config(['services.ai_content.daily_generation_limit' => 10]);
+
+        $user = User::factory()->create();
+
+        foreach (range(1, 10) as $index) {
+            ContentGeneration::query()->create([
+                'user_id' => $user->id,
+                'content_type' => 'Marketing Video',
+                'topic' => "Daily video plan {$index}",
+                'keywords' => ['daily'],
+                'target_audience' => 'Marketers',
+                'tone' => 'Professional',
+                'template_key' => 'blank',
+                'ui_language' => 'en',
+                'content_goal' => 'Awareness',
+                'output_format' => 'Storyboard',
+                'cta_style' => 'Soft',
+                'custom_instruction' => null,
+                'duration_seconds' => 30,
+                'length_control_type' => 'seconds',
+                'length_control_value' => 30,
+                'variation_count' => 1,
+                'best_variation_index' => null,
+                'variations' => [
+                    ['title' => 'Variation 1', 'script' => 'Existing script', 'content' => 'Existing script', 'scenes' => []],
+                ],
+                'prompt' => 'Prompt',
+                'generated_content' => 'Existing script',
+                'provider' => 'gemini',
+                'model' => 'gemini-3-flash-preview',
+                'generation_duration_ms' => 500,
+                'created_at' => now()->subMinutes($index),
+                'updated_at' => now()->subMinutes($index),
+            ]);
+        }
+
+        $this->mock(AiContentGeneratorService::class, function (MockInterface $mock): void {
+            $mock->shouldNotReceive('generate');
+        });
+
+        $response = $this->actingAs($user)->post(route('generations.store'), [
+            'template_key' => 'blank',
+            'ui_language' => 'en',
+            'video_type' => 'Marketing Video',
+            'topic' => 'Another launch video',
+            'keywords' => 'ai, launch',
+            'target_audience' => 'Busy professionals',
+            'tone' => 'Professional',
+            'video_goal' => 'Awareness',
+            'video_format' => 'Storyboard',
+            'cta_style' => 'Soft',
+            'custom_instruction' => null,
+            'variation_count' => 1,
+            'duration_seconds' => 30,
+        ]);
+
+        $response->assertSessionHasErrors('generation');
+        $this->assertDatabaseCount('content_generations', 10);
+    }
+
     public function test_user_can_regenerate_an_existing_brief(): void
     {
         $user = User::factory()->create([
